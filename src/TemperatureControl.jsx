@@ -1,28 +1,30 @@
 import React from 'react';
 
-function TemperatureControl(id) {
+function TemperatureControl(props) {
+  console.log(props);
+  let id=1;
   return (
-  <div class="controlbox" id="arduinocontrol-${id}">
-    <div class="header"><div class="indicator"></div> ZONE ${id}</div>
+  <div className="controlbox" id="arduinocontrol-${id}">
+    <div className="header"><div className="indicator"></div> ZONE {id}</div>
     <div>
-      <div class="button pwrctrl" onclick="turnPwrCtrl(this,${id})">PWRCTRL</div>
-      <div class="button pwr">PWR</div>
-      <div class="button">CONFIG</div>
+      <div className="button pwrctrl" onclick="turnPwrCtrl(this,${id})">PWRCTRL</div>
+      <div className="button pwr">PWR</div>
+      <div className="button">CONFIG</div>
     </div>
     <div>
-      <div class="button" onclick="turnShowPwr(this,${id})">SHOWPWR</div>
+      <div className="button" onclick="turnShowPwr(this,${id})">SHOWPWR</div>
     </div>
     <div>
-      <div class="parameter temperature button" onclick="modalOpen(this,${id})">
-        <div class="name">temperature</div>
-        <div class="value">0.0°(0.0°)</div>
+      <div className="parameter temperature button" onclick="modalOpen(this,${id})">
+        <div className="name">temperature</div>
+        <div className="value">0.0°(0.0°)</div>
       </div>
-      <div class="parameter humidity">
-        <div class="name">humidity</div>
-        <div class="value">0.0%</div>
+      <div className="parameter humidity">
+        <div className="name">humidity</div>
+        <div className="value">0.0%</div>
       </div>
     </div>
-    <div class="sensorstatus"></div>
+    <div className="sensorstatus"></div>
   </div>
   );
 }

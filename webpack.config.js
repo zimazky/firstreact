@@ -6,18 +6,28 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.js',
-	publicPath: '/dist/'
-  },
-  devServer: {
-	  overlay: true
+	  publicPath: '/dist/'
   },
   module: {
     rules: [ 
       {
         test: /\.(js|jsx)$/,
         exclude: '/node_modules/',
-        use: ['babel-loader'],
+        loader: 'babel-loader',
+        options:{
+          presets:['@babel/preset-react']
+        }
       }
     ]
+  },
+
+  devServer: {
+    open: ['/index.html'],
+    client: {
+      overlay: true,
+    },
+    static: {
+      directory: __dirname,
+    },
   }
 };
