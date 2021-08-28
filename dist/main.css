@@ -1,0 +1,33 @@
+/*!****************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./src/components/TemperatureControl.module.css ***!
+  \****************************************************************************************************************************/
+.controlbox_dee125d{
+	width: 262px;
+	margin:0 0 10px 0;
+}
+.header_b192608{
+	background-color: #555555; 
+	padding:2px;
+	margin:0 0 5px 0;
+}
+.button_ad5f59c{
+	margin:0 5px 5px 0;
+}
+.parameter__888c3e{
+	display:inline-block;
+	margin:0 10px 5px 0;
+}
+.name__802376{
+	padding: 3px 0 0 0;
+}
+.value_cfa05a3{
+	font-size: 25px
+}
+/*!*****************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js!./src/index.css ***!
+  \*****************************************************************/
+* {
+	padding: 0;
+	margin: 0;
+	border: 0;
+	}
