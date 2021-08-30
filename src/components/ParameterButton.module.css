@@ -4,3 +4,15 @@
 .value{
 	font-size: 25px
 }
+.modal_parameter, .modal_button {
+	font-size: 28px;
+	font-weight: bold;
+	padding: 0 16px;
+}
+.modal_button {
+	color: #bbb;
+  cursor: pointer;
+}
+.modal_button:hover {
+	color: #000;
+}

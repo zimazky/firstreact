@@ -5,6 +5,7 @@
   left: 0;
   right: 0;
   bottom: 0;
+  cursor: default;
 }
 
 .modalWindow {
@@ -24,6 +25,7 @@
 .modalBody,
 .modalFooter {
   padding: 10px 10px;
+  text-align: center;
 }
 
 .modalHeader {

@@ -18,12 +18,13 @@ export default function({zone, update}) {
     <div>
       <ParameterButton 
         parameterName='temperature'
-        value={zone.temperature.toFixed(1) + '°(' + zone.targetTemperature.toFixed(1) + '±' + zone.targetTemperatureDelta + ')'}
+        displayedValue={zone.temperature.toFixed(1) + '°(' + zone.targetTemperature.toFixed(1) + '±' + zone.targetTemperatureDelta + ')'}
+        controlledValue={zone.targetTemperature}
         update={(newTargetTemperature)=>{update({...zone,targetTemperature:newTargetTemperature})}}
       />
       <ParameterButton 
         parameterName='humidity'
-        value={zone.humidity.toFixed(1) + '%'}
+        displayedValue={zone.humidity.toFixed(1) + '%'}
         disabled
       />
     </div>

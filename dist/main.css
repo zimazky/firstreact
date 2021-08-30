@@ -1,33 +1,151 @@
-/*!****************************************************************************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[1].use[1]!./src/components/TemperatureControl.module.css ***!
-  \****************************************************************************************************************************/
-.controlbox_dee125d{
+.Button-module_button__be17e0 {
+	display:inline-block;
+	border: 1px solid;
+	border-radius: 3px;
+	white-space: nowrap;
+	padding: 3px 6px;
+	margin: 0;
+	cursor: pointer;
+}
+.Button-module_button__be17e0:active, .Button-module_button__be17e0.Button-module_active__6dea37, .Button-module_button__be17e0.Button-module_active__6dea37:hover {
+	background-color: #F49B25;
+	text-shadow: none;
+	color: #fff;
+}
+.Button-module_button__be17e0:hover {
+	background-color: #fff;
+	text-shadow: none;
+	color: #000;
+}
+.Button-module_button__be17e0[disabled] {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.Modal-module_modalOverlay_f9c4b7b {
+  background-color: rgba(0,0,0,0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.Modal-module_modalWindow_a4aa26e {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #FFF;
+  min-height: 200px;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;  
+}
+
+.Modal-module_modalHeader_fa40903,
+.Modal-module_modalBody_e10262b,
+.Modal-module_modalFooter_f041013 {
+  padding: 10px 10px;
+}
+
+.Modal-module_modalHeader_fa40903 {
+  min-height: 60px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  box-sizing: border-box;
+  align-items: center;
+}
+
+.Modal-module_modalTitle__07e9f4 {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.Modal-module_modalFooter_f041013 {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.Modal-module_modalFooter_f041013 *:last-child {
+  margin-left: 5px;
+}
+
+.Modal-module_apply__17fe28, .Modal-module_cancel__3cd4e5 {
+  outline: none;
+	display:inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
+	white-space: nowrap;  
+  padding: 10px 15px;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.Modal-module_apply__17fe28:hover, .Modal-module_cancel__3cd4e5:hover {
+  background-color: #70B4E6;
+}
+
+.Modal-module_apply__17fe28 {
+  background-color: #7CC6fE;
+  color: #000;
+}
+
+.Modal-module_cancel__3cd4e5 {
+  background-color: #FFF;
+  color: #000;
+}
+.ParameterButton-module_name__b2ecc9{
+	padding: 3px 0 0 0;
+}
+.ParameterButton-module_value_beb9422{
+	font-size: 25px
+}
+
+.TemperatureControl-module_controlbox_dee125d{
 	width: 262px;
 	margin:0 0 10px 0;
 }
-.header_b192608{
+.TemperatureControl-module_header_b192608{
 	background-color: #555555; 
 	padding:2px;
 	margin:0 0 5px 0;
 }
-.button_ad5f59c{
-	margin:0 5px 5px 0;
-}
-.parameter__888c3e{
-	display:inline-block;
-	margin:0 10px 5px 0;
-}
-.name__802376{
-	padding: 3px 0 0 0;
-}
-.value_cfa05a3{
-	font-size: 25px
-}
-/*!*****************************************************************!*\
-  !*** css ./node_modules/css-loader/dist/cjs.js!./src/index.css ***!
-  \*****************************************************************/
+
 * {
 	padding: 0;
 	margin: 0;
 	border: 0;
+	box-sizing: border-box;
 	}
+
+body {
+	font-size: 12px;
+	background-color: #333333;
+	color: #bbbbbb;
+	font-family: 'Roboto',sans-serif;
+}
+
+.button { 
+	display:inline-block;
+	border: 1px solid; 
+	border-radius: 3px; 
+	white-space: nowrap; 
+	padding: 3px 6px; 
+	margin: 0; 
+	cursor: pointer;
+}
+.button:active, .button.active, .button.active:hover { 
+	background-color: #F49B25; 
+	text-shadow: none; 
+	color: #fff; 
+}
+.button:hover { 
+	background-color: #fff; 
+	text-shadow: none; 
+	color: #000;
+}
