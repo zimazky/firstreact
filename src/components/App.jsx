@@ -1,6 +1,8 @@
 import TemperatureControl from './TemperatureControl.jsx';
+import Diagram from './Diagram.jsx';
 
 export default function () {
+  let dataSet = [15,18,14,13,15,20,21,25,29,24,25,22,10,12,9,8,6,3,5,4,8,7]
   let zones = [
     {id: '1', temperature: 21.5, targetTemperature: 25., targetTemperatureDelta: 0.2, humidity: 56.},
     {id: '2', temperature: 22.4, targetTemperature: 23.4, targetTemperatureDelta: 0.1, humidity: 55.6},
@@ -8,8 +10,11 @@ export default function () {
   ];
   const [state,setState] = React.useState(zones)
   return (
+    <>
+      <Diagram dataSet={dataSet}/>
       <div>
         {state.map((zone, index) => <TemperatureControl key={index} zone={zone} update={(modifyedZone)=>{setState(state.map((rec)=>{console.log(modifyedZone); return (rec.id==modifyedZone.id)?modifyedZone:rec}))}}/>)}
       </div>
+    </>
   );
 }
