@@ -35,8 +35,10 @@ const timeUnits = [
 
 function displayTimeGrid( x, y, width, height, min, max, maxTick=50, color='gray', textcolor='gray') {
   let dx = maxTick*(max-min)/width
-  let [i] = [0,...timeUnits.filter(a => dx<=a.value).keys()].slice(-1)
-  //i = (i==0) ? 0 : i-1
+  console.log('dx',dx)
+  let [i] = [0,...timeUnits.filter(a => dx>=a.value).keys()].slice(-1)
+  console.log(i)
+  //i=i+1
   let step = timeUnits[i].value
   let tmin = (~~((min+timeUnits[i].shift)/step+1))*step-timeUnits[i].shift
   let scale = width/(max-min)
@@ -98,49 +100,42 @@ function displayTimeGrid( x, y, width, height, min, max, maxTick=50, color='gray
       contextTicks.push({ string: ((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d+' '+((hr<10)?'0':'')+hr+'h', x: at})
     }
   }
-  /*  
+    
   // Отображение уровня деталей
-  for(var h = tmin; h<max; h += step) {
-    var at = ~~(x+(h-min)*scale)+0.5;
-    this._ctx.beginPath();
-    this._ctx.moveTo( at, y+12 ); 
-    this._ctx.lineTo( at, y+height );
-    this._ctx.stroke();
-    var date = new Date((h+timeZone*3600)*1000);
+  let detailTicks = []
+  for(let h = tmin; h<max; h += step) {
+    let at = ~~(x+(h-min)*scale)+0.5;
+    let date = new Date((h+timeZone*3600)*1000);
     if (timeUnits[i].unit == 's') {
-      var s = date.getUTCSeconds();
-      var str = '' + ((s<10)?'0':'')+s + '\'\'';
-      this._ctx.fillText(str,at,12);
+      let s = date.getUTCSeconds();
+      detailTicks.push({string: ((s<10)?'0':'')+s+'\'\'', x: at})
     }
     else if (timeUnits[i].unit == 'm') {
-      m = date.getUTCMinutes();
-      var str = '' + ((m<10)?'0':'')+m + '\'';
-      this._ctx.fillText(str,at,12);
+      let m = date.getUTCMinutes();
+      detailTicks.push({string: ((m<10)?'0':'')+m+'\'', x: at})
     }
     else if (timeUnits[i].unit == 'h') {
-      var hr = date.getUTCHours();
-      var str = '' + ((hr<10)?'0':'')+hr + 'h';
-      this._ctx.fillText(str,at,12);
+      let hr = date.getUTCHours();
+      detailTicks.push({string: ((hr<10)?'0':'')+hr+'h', x: at})
     }
     else if (timeUnits[i].unit == 'd') {
-      var d = date.getUTCDate();
-      var str = '' + ((d<10)?'0':'')+d;
-      this._ctx.fillText(str,at,12);
+      let d = date.getUTCDate();
+      detailTicks.push({string: ((d<10)?'0':'')+d, x: at})
     }
     else if (timeUnits[i].unit == 'w') {
-      var d = date.getUTCDate();
-      var m = date.getUTCMonth()+1;
-      var str = '' + ((d<10)?'0':'')+d;
-      this._ctx.fillText(str,at,12);
+      let d = date.getUTCDate();
+      detailTicks.push({string: ((d<10)?'0':'')+d, x: at})
     }
   }
-  this._ctx.restore()
-  */
+  
+ console.log(contextTicks)
+ console.log(detailTicks)
 }
 
 
 export default function({width=300, height=200, dataSet}) {
   //const max
+  displayTimeGrid(0,0,300,200,Date.now()/1000-0.45*24*3600,Date.now()/1000,50)
   let d = dataSet.map((p,i)=>{return i*5 + ' ' + p}).join(' ')
   return (
     <div className={styles.gridBox}>
