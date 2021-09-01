@@ -1,4 +1,6 @@
+//import TimeInterval from '../TimeInterval.js'
 import styles from './Diagram.module.css'
+
 
 const timeZone = 3
 const timeUnits = [
@@ -33,30 +35,25 @@ const timeUnits = [
   {value:2419200, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600}	//4w		1M						YYYY
 ]
 
-function displayTimeGrid( x, y, width, height, min, max, maxTick=50, color='gray', textcolor='gray') {
-  let dx = maxTick*(max-min)/width
-  console.log('dx',dx)
-  let [i] = [0,...timeUnits.filter(a => dx>=a.value).keys()].slice(-1)
-  console.log(i)
-  //i=i+1
-  let step = timeUnits[i].value
-  let tmin = (~~((min+timeUnits[i].shift)/step+1))*step-timeUnits[i].shift
-  let scale = width/(max-min)
+function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
+  let maxTickTimeInterval = maxTick*(endTime-startTime)/width
+  let [i] = [0,...timeUnits.filter(a => maxTickTimeInterval>=a.value).keys()].slice(-1)
+  let scale = width/(endTime-startTime)
 
   // Отображение уровня контекста
   // 1. Определяем дату-время левой границы
   // 2. В зависимости от уровня контекста найти границу контекста и отобразить штрихом, вывести текстовую метку
   // 3. Повторить пункт 2 до тех пор пока не выйдем за границы отображения.
-  let contextTicks = []
-  let ldate = new Date((min+timeZone*3600)*1000);
+  const contextTicks = []
+  let ldate = new Date((startTime+timeZone*3600)*1000);
   let lhr = ldate.getUTCHours();
   let ld = ldate.getUTCDate();
   let lm = ldate.getUTCMonth()+1;
   let lyr = ldate.getUTCFullYear();
   if (timeUnits[i].unit == 'd' || timeUnits[i].unit == 'w') {
     // контекст - месяцы
-    let date = new Date((min+timeZone*3600)*1000);
-    for(let k=0,cx=min;cx<max;k++) {
+    let date = new Date((startTime+timeZone*3600)*1000);
+    for(let k=0,cx=startTime;cx<endTime;k++) {
       let m = date.getUTCMonth()+1;
       let yr = date.getUTCFullYear();
       date.setUTCHours(0);
@@ -67,79 +64,123 @@ function displayTimeGrid( x, y, width, height, min, max, maxTick=50, color='gray
       m = date.getUTCMonth()+1;
       yr = date.getUTCFullYear();
       cx = date.getTime()/1000-timeZone*3600;
-      let at = x+(cx-min)*scale;
-      if (k==0 && (at-x)>60) contextTicks.push({string: lyr+'.'+((lm<10)?'0':'')+lm+'.'+((ld<10)?'0':'')+ld, x: 0})
-      contextTicks.push({string: yr+'.'+((m<10)?'0':'')+m, x: at})
+      let at = (cx-startTime)*scale;
+      if (k==0 && at>60) contextTicks.push({label: lyr+'.'+((lm<10)?'0':'')+lm+'.'+((ld<10)?'0':'')+ld, x: 0})
+      contextTicks.push({label: yr+'.'+((m<10)?'0':'')+m, x: at})
     }
   }
   else if (timeUnits[i].unit == 'h') {
     // контекст - дни
-    for(let k=0,cx=min; cx<max; cx+=86400,k++) {
-      if (k==0) cx=(~~((min+timeUnits[i].shift)/86400+1))*86400-timeUnits[i].shift;
-      let at = ~~(x+(cx-min)*scale)+0.5;
-      if (k==0 && (at-x)>60) contextTicks.push({string: lyr+'.'+((lm<10)?'0':'')+lm +'.'+((ld<10)?'0':'')+ld, x:0})
+    for(let k=0,cx=startTime; cx<endTime; cx+=86400,k++) {
+      if (k==0) cx=(~~((startTime+timeUnits[i].shift)/86400+1))*86400-timeUnits[i].shift;
+      let at = (cx-startTime)*scale;
+      if (k==0 && at>60) contextTicks.push({label: lyr+'.'+((lm<10)?'0':'')+lm +'.'+((ld<10)?'0':'')+ld, x:0})
       let date = new Date((cx+timeZone*3600)*1000);
       let d = date.getUTCDate();
       let m = date.getUTCMonth()+1;
       let yr = date.getUTCFullYear();
-      contextTicks.push({string: yr+'.'+((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d, x: at})
+      contextTicks.push({label: yr+'.'+((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d, x: at})
     }
   }
   else if (timeUnits[i].unit == 'm') {
     // контекст - часы
-    for(let k=0,cx=min; cx<max; cx+=3600,k++) {
-      if (k==0) cx=(~~((min+timeUnits[i].shift)/3600+1))*3600-timeUnits[i].shift; 
-      let at = ~~(x+(cx-min)*scale)+0.5;
-      if (k==0 && (at-x)>95) 
-        contextTicks.push({string: lyr+'.'+((lm<10)?'0':'')+lm+'.'+((ld<10)?'0':'')+ld+' '+((lhr<10)?'0':'')+lhr+':00', x: 0})
+    for(let k=0,cx=startTime; cx<endTime; cx+=3600,k++) {
+      if (k==0) cx=(~~((startTime+timeUnits[i].shift)/3600+1))*3600-timeUnits[i].shift; 
+      let at = (cx-startTime)*scale;
+      if (k==0 && at>95) 
+        contextTicks.push({label: lyr+'.'+((lm<10)?'0':'')+lm+'.'+((ld<10)?'0':'')+ld+' '+((lhr<10)?'0':'')+lhr+':00', x: 0})
       let date = new Date((cx+timeZone*3600)*1000);
       let hr = date.getUTCHours();
       let d = date.getUTCDate();
       let m = date.getUTCMonth()+1;
       let yr = date.getUTCFullYear();
-      contextTicks.push({ string: ((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d+' '+((hr<10)?'0':'')+hr+'h', x: at})
+      contextTicks.push({ label: ((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d+' '+((hr<10)?'0':'')+hr+'h', x: at})
     }
   }
+  return contextTicks;
+}
     
+function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
+  let maxTickTimeInterval = maxTick*(endTime-startTime)/width
+  let [i] = [0,...timeUnits.filter(a => maxTickTimeInterval>=a.value).keys()].slice(-1)
+  let step = timeUnits[i].value
+  let tmin = (~~((startTime+timeUnits[i].shift)/step+1))*step-timeUnits[i].shift
+  let scale = width/(endTime-startTime)
+
   // Отображение уровня деталей
-  let detailTicks = []
-  for(let h = tmin; h<max; h += step) {
-    let at = ~~(x+(h-min)*scale)+0.5;
+  const detailTicks = []
+  for(let h = tmin; h<endTime; h += step) {
+    let at = (h-startTime)*scale;
     let date = new Date((h+timeZone*3600)*1000);
     if (timeUnits[i].unit == 's') {
       let s = date.getUTCSeconds();
-      detailTicks.push({string: ((s<10)?'0':'')+s+'\'\'', x: at})
+      detailTicks.push({label: ((s<10)?'0':'')+s+'\'\'', x: at})
     }
     else if (timeUnits[i].unit == 'm') {
       let m = date.getUTCMinutes();
-      detailTicks.push({string: ((m<10)?'0':'')+m+'\'', x: at})
+      detailTicks.push({label: ((m<10)?'0':'')+m+'\'', x: at})
     }
     else if (timeUnits[i].unit == 'h') {
       let hr = date.getUTCHours();
-      detailTicks.push({string: ((hr<10)?'0':'')+hr+'h', x: at})
+      detailTicks.push({label: ((hr<10)?'0':'')+hr+'h', x: at})
     }
     else if (timeUnits[i].unit == 'd') {
       let d = date.getUTCDate();
-      detailTicks.push({string: ((d<10)?'0':'')+d, x: at})
+      detailTicks.push({label: ((d<10)?'0':'')+d, x: at})
     }
     else if (timeUnits[i].unit == 'w') {
       let d = date.getUTCDate();
-      detailTicks.push({string: ((d<10)?'0':'')+d, x: at})
+      detailTicks.push({label: ((d<10)?'0':'')+d, x: at})
     }
   }
-  
- console.log(contextTicks)
- console.log(detailTicks)
+ return detailTicks
 }
 
 
-export default function({width=300, height=200, dataSet}) {
-  //const max
-  displayTimeGrid(0,0,300,200,Date.now()/1000-0.45*24*3600,Date.now()/1000,50)
+export default function Diagram({width=300, height=200, begin, end, dataSet, onZoom}) {
+
+  const [timeInterval, setTimeInterval] = React.useState({begin, end})
+  const diagramElement = React.useRef(null);
+  
+  function onZoomTimeInterval(e) {
+    e.preventDefault()
+    let z = Math.pow(0.9, e.wheelDelta>0 ? 1 : -1)
+    let k = (e.offsetX)/width
+    console.log(z)
+    let d = z*(timeInterval.end-timeInterval.begin)
+    //if ( d < 300 ) return //ограничение увеличения
+    let t = timeInterval.begin+k*(timeInterval.end-timeInterval.begin)
+    let newbegin = t-z*(t-timeInterval.begin)
+    let newend = t+z*(timeInterval.end-t)
+    console.log(timeInterval)
+    console.log({begin: newbegin, end: newend})
+    setTimeInterval({begin: newbegin, end: newend})
+  }
+
+  React.useEffect(() => {
+    console.log('AddEventListener onMouseWheel')
+    diagramElement.current.addEventListener('wheel', onZoomTimeInterval)
+    return ()=>{diagramElement.current.removeEventListener('wheel', onZoomTimeInterval)}
+  }, [timeInterval])
+
   let d = dataSet.map((p,i)=>{return i*5 + ' ' + p}).join(' ')
   return (
     <div className={styles.gridBox}>
-      <svg width={width} height={height} viewBox={'0 0 ' + width + ' ' + height} /*preserveAspectRatio='none'*/>
+      <svg ref={diagramElement} width={width} height={height} viewBox={'0 0 ' + width + ' ' + height} /*preserveAspectRatio='none'*/>
+        <g className={styles.timeTicks}>
+        { getContextTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ return (
+          <>
+          <text key={'t'+i} x={l.x+2} y='11'>{l.label}</text>
+          <line key={'l'+i} x1={l.x} y1='0' x2={l.x} y2='13' stroke='gray'></line>
+          </>
+        )})}
+        { getDetailTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ return (
+          <>
+          <text key={'dt'+i} x={l.x+2} y='24'>{l.label}</text>
+          <line key={'dl'+i} x1={l.x} y1='13' x2={l.x} y2={height} stroke='gray'></line>
+          </>
+        )})}        
+        </g>
         <polyline points={d} fill='none' stroke='white' strokeWidth='1'/>
       </svg>
     </div>

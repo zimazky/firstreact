@@ -2,3 +2,7 @@
   border: 1px solid white;
   display: inline-block;
 }
+.timeTicks {
+  fill: gray;
+  font-size: 11px;
+}
