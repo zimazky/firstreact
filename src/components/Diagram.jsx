@@ -136,37 +136,68 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
  return detailTicks
 }
 
-
 export default function Diagram({width=300, height=200, begin, end, dataSet, onZoom}) {
 
   const [timeInterval, setTimeInterval] = React.useState({begin, end})
   const diagramElement = React.useRef(null);
-  
-  function onZoomTimeInterval(e) {
+  /////////////////////////////////////////////////////////////////////////////
+  // Обработчики мыши
+  let isDragging = false
+  let clientX0 = 0.
+  function onMouseDown(e) {
     e.preventDefault()
-    let z = Math.pow(0.9, e.wheelDelta>0 ? 1 : -1)
-    let k = (e.offsetX)/width
-    console.log(z)
-    let d = z*(timeInterval.end-timeInterval.begin)
-    //if ( d < 300 ) return //ограничение увеличения
-    let t = timeInterval.begin+k*(timeInterval.end-timeInterval.begin)
-    let newbegin = t-z*(t-timeInterval.begin)
-    let newend = t+z*(timeInterval.end-t)
-    console.log(timeInterval)
-    console.log({begin: newbegin, end: newend})
-    setTimeInterval({begin: newbegin, end: newend})
+    isDragging = true
+    clientX0 = e.offsetX
   }
-
+  function onMouseMove(e) {
+    e.preventDefault()
+    if (isDragging) {
+      let d = e.offsetX-clientX0
+      clientX0 = e.offsetX
+      setTimeInterval((prevTimeInterval)=>{
+        let tstep = (prevTimeInterval.end-prevTimeInterval.begin)/width
+        const newTimeInterval = { begin: prevTimeInterval.begin-tstep*d, end: prevTimeInterval.end-tstep*d }
+        return newTimeInterval
+      })
+    }
+  }
+  function onMouseUp(e) {
+    e.preventDefault()
+    isDragging = false
+  }
+  function onWheel(e) {
+    e.preventDefault()
+    let z = e.wheelDelta>0 ? 0.9 : 1.1111111111111112
+    let k = (e.offsetX)/width
+    setTimeInterval((prevTimeInterval)=>{
+      let d = z*(prevTimeInterval.end-prevTimeInterval.begin)
+      if ( d < 300 ) return prevTimeInterval
+      let t = prevTimeInterval.begin+k*(prevTimeInterval.end-prevTimeInterval.begin)
+      const newTimeInterval = { begin: t-z*(t-prevTimeInterval.begin), end: t+z*(prevTimeInterval.end-t)}
+      return newTimeInterval
+    })
+  }
+  /////////////////////////////////////////////////////////////////////////////
+  // Регистрация обработчиков
   React.useEffect(() => {
-    console.log('AddEventListener onMouseWheel')
-    diagramElement.current.addEventListener('wheel', onZoomTimeInterval)
-    return ()=>{diagramElement.current.removeEventListener('wheel', onZoomTimeInterval)}
-  }, [timeInterval])
+    console.log('AddEventListener Mouse')
+    diagramElement.current.addEventListener('wheel', onWheel)
+    diagramElement.current.addEventListener('mousedown', onMouseDown)
+    diagramElement.current.addEventListener('mousemove', onMouseMove)
+    diagramElement.current.addEventListener('mouseup', onMouseUp)
+    return ()=>{
+      console.log('RemoveEventListener Mouse')
+      diagramElement.current.removeEventListener('wheel', onWheel)
+      diagramElement.current.removeEventListener('mousedown', onMouseDown)
+      diagramElement.current.removeEventListener('mousemove', onMouseMove)
+      diagramElement.current.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
 
   let d = dataSet.map((p,i)=>{return i*5 + ' ' + p}).join(' ')
   return (
     <div className={styles.gridBox}>
-      <svg ref={diagramElement} width={width} height={height} viewBox={'0 0 ' + width + ' ' + height} /*preserveAspectRatio='none'*/>
+      <svg ref={diagramElement} width={width} height={height} viewBox={'0 0 ' + width + ' ' + height}>
         <g className={styles.timeTicks}>
         { getContextTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ return (
           <>
