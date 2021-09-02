@@ -32,8 +32,12 @@ const timeUnits = [
   {value:172800, qt:86400, unit:'d', shift: timeZone*3600},	//2d					1M						YYYY.MM
   {value:604800, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	//1w		1M						YYYY.MM
   {value:1209600, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	//2w		1M						YYYY.MM
-  {value:2419200, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600}	//4w		1M						YYYY
+  {value:2419200, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	//4w		1M						YYYY
+  {value:31*86400, qt:86400, unit:'M', shift: null},	      //1M					1Y						YYYY
+//  {value:61*86400, qt:86400, unit:'2M', shift: null},	      //1M					1Y						YYYY
+
 ]
+const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 
 function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
   let maxTickTimeInterval = maxTick*(endTime-startTime)/width
@@ -109,28 +113,53 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
 
   // Отображение уровня деталей
   const detailTicks = []
-  for(let h = tmin; h<endTime; h += step) {
-    let at = (h-startTime)*scale;
-    let date = new Date((h+timeZone*3600)*1000);
-    if (timeUnits[i].unit == 's') {
-      let s = date.getUTCSeconds();
-      detailTicks.push({label: ((s<10)?'0':'')+s+'\'\'', x: at})
+  if (timeUnits[i].unit == 'M') {
+    let ldate = new Date((startTime+timeZone*3600)*1000);
+    let lhr = ldate.getUTCHours();
+    let ld = ldate.getUTCDate();
+    let lm = ldate.getUTCMonth()+1;
+    let lyr = ldate.getUTCFullYear();
+    let date = new Date((startTime+timeZone*3600)*1000);
+    for(let k=0,cx=startTime;cx<endTime;k++) {
+      let m = date.getUTCMonth()+1;
+      let yr = date.getUTCFullYear();
+      date.setUTCHours(0);
+      date.setMinutes(0);
+      date.setSeconds(0);
+      date.setUTCDate(1);
+      date.setUTCMonth(m);
+      m = date.getUTCMonth()+1;
+      yr = date.getUTCFullYear();
+      cx = date.getTime()/1000-timeZone*3600;
+      let at = (cx-startTime)*scale;
+      if (k==0 && at>25) detailTicks.push({label: monthNames[lm-1], x: 0})
+      detailTicks.push({label: monthNames[m-1], x: at})
     }
-    else if (timeUnits[i].unit == 'm') {
-      let m = date.getUTCMinutes();
-      detailTicks.push({label: ((m<10)?'0':'')+m+'\'', x: at})
-    }
-    else if (timeUnits[i].unit == 'h') {
-      let hr = date.getUTCHours();
-      detailTicks.push({label: ((hr<10)?'0':'')+hr+'h', x: at})
-    }
-    else if (timeUnits[i].unit == 'd') {
-      let d = date.getUTCDate();
-      detailTicks.push({label: ((d<10)?'0':'')+d, x: at})
-    }
-    else if (timeUnits[i].unit == 'w') {
-      let d = date.getUTCDate();
-      detailTicks.push({label: ((d<10)?'0':'')+d, x: at})
+  }
+  else {
+    for(let h = tmin; h<endTime; h += step) {
+      let at = (h-startTime)*scale;
+      let date = new Date((h+timeZone*3600)*1000);
+      if (timeUnits[i].unit == 's') {
+        let s = date.getUTCSeconds();
+        detailTicks.push({label: ((s<10)?'0':'')+s+'\'\'', x: at})
+      }
+      else if (timeUnits[i].unit == 'm') {
+        let m = date.getUTCMinutes();
+        detailTicks.push({label: ((m<10)?'0':'')+m+'\'', x: at})
+      }
+      else if (timeUnits[i].unit == 'h') {
+        let hr = date.getUTCHours();
+        detailTicks.push({label: ((hr<10)?'0':'')+hr+'h', x: at})
+      }
+      else if (timeUnits[i].unit == 'd') {
+        let d = date.getUTCDate();
+        detailTicks.push({label: ((d<10)?'0':'')+d, x: at})
+      }
+      else if (timeUnits[i].unit == 'w') {
+        let d = date.getUTCDate();
+        detailTicks.push({label: ((d<10)?'0':'')+d, x: at})
+      }
     }
   }
  return detailTicks
@@ -139,6 +168,7 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
 export default function Diagram({width=300, height=200, begin, end, dataSet, onZoom}) {
 
   const [timeInterval, setTimeInterval] = React.useState({begin, end})
+  const [cursorPosition, setCursorPosition] = React.useState(timeInterval.begin)
   const diagramElement = React.useRef(null);
   /////////////////////////////////////////////////////////////////////////////
   // Обработчики мыши
@@ -159,7 +189,10 @@ export default function Diagram({width=300, height=200, begin, end, dataSet, onZ
         const newTimeInterval = { begin: prevTimeInterval.begin-tstep*d, end: prevTimeInterval.end-tstep*d }
         return newTimeInterval
       })
+      return
     }
+    // console.log(e.offsetX)
+    setCursorPosition(()=>timeInterval.begin+e.offsetX*(timeInterval.end-timeInterval.begin)/width)
   }
   function onMouseUp(e) {
     e.preventDefault()
@@ -177,6 +210,14 @@ export default function Diagram({width=300, height=200, begin, end, dataSet, onZ
       return newTimeInterval
     })
   }
+  function onMouseOver(e) {
+    console.log('over')
+    setMouseOver(true)
+  }
+  function onMouseOut(e) {
+    console.log('out')
+    setMouseOver(false)
+  }
   /////////////////////////////////////////////////////////////////////////////
   // Регистрация обработчиков
   React.useEffect(() => {
@@ -185,17 +226,22 @@ export default function Diagram({width=300, height=200, begin, end, dataSet, onZ
     diagramElement.current.addEventListener('mousedown', onMouseDown)
     diagramElement.current.addEventListener('mousemove', onMouseMove)
     diagramElement.current.addEventListener('mouseup', onMouseUp)
+//    diagramElement.current.addEventListener('mouseover', onMouseOver)
+//    diagramElement.current.addEventListener('mouseout', onMouseOut)
     return ()=>{
       console.log('RemoveEventListener Mouse')
       diagramElement.current.removeEventListener('wheel', onWheel)
       diagramElement.current.removeEventListener('mousedown', onMouseDown)
       diagramElement.current.removeEventListener('mousemove', onMouseMove)
       diagramElement.current.removeEventListener('mouseup', onMouseUp)
-    }
+//      diagramElement.current.removeEventListener('mouseover', onMouseOver)
+//      diagramElement.current.removeEventListener('mouseout', onMouseOut)
+      }
   }, [])
 
   let d = dataSet.map((p,i)=>{return i*5 + ' ' + p}).join(' ')
   return (
+    <>
     <div className={styles.gridBox}>
       <svg ref={diagramElement} width={width} height={height} viewBox={'0 0 ' + width + ' ' + height}>
         <g className={styles.timeTicks}>
@@ -215,5 +261,7 @@ export default function Diagram({width=300, height=200, begin, end, dataSet, onZ
         <polyline points={d} fill='none' stroke='white' strokeWidth='1'/>
       </svg>
     </div>
+    <div>{cursorPosition}</div>
+    </>
   )
 }
