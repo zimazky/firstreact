@@ -2,21 +2,14 @@
   border: 1px solid white;
   display: inline-block;
   position: relative;
-}
-.timeTicks {
-  fill: gray;
-  font-size: 11px;
+  user-select: none;
 }
 .context, .detail {
   height: 12px;
   overflow: clip;
-  /*border-bottom: solid 1px gray;*/
 }
 .context {
   border-bottom: solid 1px gray;
-}
-.detail {
-  height: 200px;
 }
 .contextTickLabels, .detailTickLabels {
   position: relative;
@@ -27,10 +20,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.contextTickLabels:hover {
-  background-color: teal;
-}
-.detailTickLabels:hover {
+.contextTickLabels:hover, .detailTickLabels:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
 .contextTickLabels:first-child, .detailTickLabels:first-child {

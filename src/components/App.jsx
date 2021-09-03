@@ -1,5 +1,6 @@
 import TemperatureControl from './TemperatureControl.jsx';
 import Diagram from './Diagram.jsx';
+import Line from './Line.jsx';
 
 export default function () {
   let dataSet = [15,18,14,13,15,20,21,25,29,24,25,22,10,12,9,8,6,3,5,4,8,7]
@@ -15,7 +16,11 @@ export default function () {
   
   return (
     <>
-      <Diagram begin={ti.begin} end={ti.end} dataSet={dataSet}/>
+      <Diagram begin={ti.begin} end={ti.end}>
+        <Line data={dataSet}/>
+      </Diagram>
+      <Diagram begin={ti.begin} end={ti.end}>
+      </Diagram>
       <div>
         {state.map((zone, index) => <TemperatureControl key={index} zone={zone} update={(modifyedZone)=>{setState(state.map((rec)=>{console.log(modifyedZone); return (rec.id==modifyedZone.id)?modifyedZone:rec}))}}/>)}
       </div>
