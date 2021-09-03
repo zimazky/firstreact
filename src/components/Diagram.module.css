@@ -1,8 +1,44 @@
 .gridBox {
   border: 1px solid white;
   display: inline-block;
+  position: relative;
 }
 .timeTicks {
   fill: gray;
   font-size: 11px;
+}
+.context, .detail {
+  height: 12px;
+  overflow: clip;
+  /*border-bottom: solid 1px gray;*/
+}
+.context {
+  border-bottom: solid 1px gray;
+}
+.detail {
+  height: 200px;
+}
+.contextTickLabels, .detailTickLabels {
+  position: relative;
+  display: inline-block;
+  font-size: 10px;
+  border-left: solid 1px gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.contextTickLabels:hover {
+  background-color: teal;
+}
+.detailTickLabels:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.contextTickLabels:first-child, .detailTickLabels:first-child {
+  border-left: none;
+}
+.svgBox {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0);
+  left: 0;
+  top: 24px;
 }

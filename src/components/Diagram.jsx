@@ -32,9 +32,10 @@ const timeUnits = [
   {value:172800, qt:86400, unit:'d', shift: timeZone*3600},	//2d					1M						YYYY.MM
   {value:604800, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	//1w		1M						YYYY.MM
   {value:1209600, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	//2w		1M						YYYY.MM
-  {value:2419200, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	//4w		1M						YYYY
+//  {value:2419200, qt:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	//4w		1M						YYYY
   {value:31*86400, qt:86400, unit:'M', shift: null},	      //1M					1Y						YYYY
 //  {value:61*86400, qt:86400, unit:'2M', shift: null},	      //1M					1Y						YYYY
+//  {value:~~(365.2425*86400), qt:86400, unit:'Y', shift: null},//1Y					1Y						YYYY
 
 ]
 const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
@@ -165,10 +166,146 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
  return detailTicks
 }
 
+
+function getContextTimeTickLabelsR( startTime, endTime, width, maxTick = 50) {
+  let maxTickTimeInterval = maxTick*(endTime-startTime)/width
+  let [i] = [0,...timeUnits.filter(a => maxTickTimeInterval>=a.value).keys()].slice(-1)
+  let scale = width/(endTime-startTime)
+
+  const contextTicks = []
+  let ldate = new Date((startTime+timeZone*3600)*1000);
+  let lhr = ldate.getUTCHours();
+  let ld = ldate.getUTCDate();
+  let lm = ldate.getUTCMonth()+1;
+  let lyr = ldate.getUTCFullYear();
+  if (timeUnits[i].unit == 'M') {
+    let currentDate = new Date((startTime+timeZone*3600)*1000)
+    let currentTick = startTime
+    do {
+      let yr = currentDate.getUTCFullYear()
+      currentDate.setUTCHours(0)
+      currentDate.setMinutes(0)
+      currentDate.setSeconds(0)
+      currentDate.setUTCFullYear(yr+1,0,1)
+      let nextCurrentTick = currentDate.getTime()/1000-timeZone*3600
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      contextTicks.push({label: yr, width})
+      currentTick = nextCurrentTick
+    } while(currentTick < endTime)
+  }
+  else if (timeUnits[i].unit == 'd' || timeUnits[i].unit == 'w') {
+    let currentDate = new Date((startTime+timeZone*3600)*1000)
+    let currentTick = startTime
+    do {
+      let m = currentDate.getUTCMonth()+1
+      let yr = currentDate.getUTCFullYear()
+      currentDate.setUTCHours(0)
+      currentDate.setMinutes(0)
+      currentDate.setSeconds(0)
+      currentDate.setUTCDate(1)
+      currentDate.setUTCMonth(m)
+      let nextCurrentTick = currentDate.getTime()/1000-timeZone*3600
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      contextTicks.push({label: yr+'.'+((m<10)?'0':'')+m, width})
+      currentTick = nextCurrentTick
+    } while(currentTick < endTime)
+  }
+  else if (timeUnits[i].unit == 'h') {
+    let currentTick = startTime
+    let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/86400+1))*86400-timeUnits[i].shift
+    do {
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      let currentDate = new Date((currentTick+timeZone*3600)*1000)
+      let d = currentDate.getUTCDate()
+      let m = currentDate.getUTCMonth()+1
+      let yr = currentDate.getUTCFullYear()
+      contextTicks.push({label: yr+'.'+((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d, width})
+      currentTick = nextCurrentTick
+      nextCurrentTick+=86400
+    } while(currentTick < endTime)
+  }
+  else if (timeUnits[i].unit == 'm') {
+    let currentTick = startTime
+    let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/3600+1))*3600-timeUnits[i].shift
+    do {
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      let currentDate = new Date((currentTick+timeZone*3600)*1000)
+      let hr = currentDate.getUTCHours()
+      let d = currentDate.getUTCDate()
+      let m = currentDate.getUTCMonth()+1
+      let yr = currentDate.getUTCFullYear()
+      contextTicks.push({label: ((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d+' '+((hr<10)?'0':'')+hr+'h', width})
+      currentTick = nextCurrentTick
+      nextCurrentTick+=3600
+    } while(currentTick < endTime)
+  }
+  return contextTicks;
+}
+
+function getDetailTimeTickLabelsR( startTime, endTime, width, maxTick = 50) {
+  let maxTickTimeInterval = maxTick*(endTime-startTime)/width
+  let [i] = [0,...timeUnits.filter(a => maxTickTimeInterval>=a.value).keys()].slice(-1)
+  let scale = width/(endTime-startTime)
+
+  // Отображение уровня деталей
+  const detailTicks = []
+  if (timeUnits[i].unit == 'M') {
+    let currentDate = new Date((startTime+timeZone*3600)*1000)
+    let currentTick = startTime
+    do {
+      let m = currentDate.getUTCMonth()+1
+      let yr = currentDate.getUTCFullYear()
+      currentDate.setUTCHours(0)
+      currentDate.setMinutes(0)
+      currentDate.setSeconds(0)
+      currentDate.setUTCDate(1)
+      currentDate.setUTCMonth(m)
+      let nextCurrentTick = currentDate.getTime()/1000-timeZone*3600
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      detailTicks.push({label: monthNames[m-1], width})
+      currentTick = nextCurrentTick
+    } while(currentTick < endTime)
+  }
+  else {
+    let tickInterval = timeUnits[i].value
+    let currentTick = startTime
+    let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/tickInterval+1))*tickInterval-timeUnits[i].shift
+    do {
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      let currentDate = new Date((currentTick+timeZone*3600)*1000)
+      if (timeUnits[i].unit == 's') {
+        let s = currentDate.getUTCSeconds()
+        detailTicks.push({label: ((s<10)?'0':'')+s+'\'\'', width})
+      }
+      else if (timeUnits[i].unit == 'm') {
+        let m = currentDate.getUTCMinutes()
+        detailTicks.push({label: ((m<10)?'0':'')+m+'\'', width})
+      }
+      else if (timeUnits[i].unit == 'h') {
+        let hr = currentDate.getUTCHours()
+        detailTicks.push({label: ((hr<10)?'0':'')+hr+'h', width})
+      }
+      else if (timeUnits[i].unit == 'd') {
+        let d = currentDate.getUTCDate()
+        detailTicks.push({label: ((d<10)?'0':'')+d, width})
+      }
+      else if (timeUnits[i].unit == 'w') {
+        let d = currentDate.getUTCDate();
+        detailTicks.push({label: ((d<10)?'0':'')+d, width})
+      }
+      currentTick = nextCurrentTick
+      nextCurrentTick += tickInterval
+    } while(currentTick < endTime)
+  }
+ return detailTicks
+}
+
+
+
 export default function Diagram({width=300, height=200, begin, end, dataSet, onZoom}) {
 
   const [timeInterval, setTimeInterval] = React.useState({begin, end})
-  const [cursorPosition, setCursorPosition] = React.useState(timeInterval.begin)
+  const [cursorPosition, setCursorPosition] = React.useState(0)
   const diagramElement = React.useRef(null);
   /////////////////////////////////////////////////////////////////////////////
   // Обработчики мыши
@@ -186,13 +323,11 @@ export default function Diagram({width=300, height=200, begin, end, dataSet, onZ
       clientX0 = e.offsetX
       setTimeInterval((prevTimeInterval)=>{
         let tstep = (prevTimeInterval.end-prevTimeInterval.begin)/width
-        const newTimeInterval = { begin: prevTimeInterval.begin-tstep*d, end: prevTimeInterval.end-tstep*d }
-        return newTimeInterval
+        return { begin: prevTimeInterval.begin-tstep*d, end: prevTimeInterval.end-tstep*d }
       })
-      return
     }
     // console.log(e.offsetX)
-    setCursorPosition(()=>timeInterval.begin+e.offsetX*(timeInterval.end-timeInterval.begin)/width)
+    setCursorPosition(e.offsetX)
   }
   function onMouseUp(e) {
     e.preventDefault()
@@ -206,8 +341,7 @@ export default function Diagram({width=300, height=200, begin, end, dataSet, onZ
       let d = z*(prevTimeInterval.end-prevTimeInterval.begin)
       if ( d < 300 ) return prevTimeInterval
       let t = prevTimeInterval.begin+k*(prevTimeInterval.end-prevTimeInterval.begin)
-      const newTimeInterval = { begin: t-z*(t-prevTimeInterval.begin), end: t+z*(prevTimeInterval.end-t)}
-      return newTimeInterval
+      return { begin: t-z*(t-prevTimeInterval.begin), end: t+z*(prevTimeInterval.end-t)}
     })
   }
   function onMouseOver(e) {
@@ -242,26 +376,42 @@ export default function Diagram({width=300, height=200, begin, end, dataSet, onZ
   let d = dataSet.map((p,i)=>{return i*5 + ' ' + p}).join(' ')
   return (
     <>
+    <h1>Sample diagram</h1>
     <div className={styles.gridBox}>
-      <svg ref={diagramElement} width={width} height={height} viewBox={'0 0 ' + width + ' ' + height}>
+      <div className={styles.context}> { getContextTimeTickLabelsR(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ 
+        return (
+          <div className={styles.contextTickLabels} key={i} style={{width: l.width}}>{l.label}</div>
+        )})
+      }
+      </div>
+      <div className={styles.detail} style={{height: height+12}}> { 
+        getDetailTimeTickLabelsR(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ 
+        return (
+          <div className={styles.detailTickLabels} key={i} style={{width: l.width, height: height+12}}>{l.label}</div>
+        )})
+      }
+      </div>
+      <svg ref={diagramElement} width={width} height={height} viewBox={'0 0 ' + width + ' ' + height} className={styles.svgBox}>
+      {/*         
         <g className={styles.timeTicks}>
         { getContextTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ return (
-          <>
-          <text key={'t'+i} x={l.x+2} y='11'>{l.label}</text>
-          <line key={'l'+i} x1={l.x} y1='0' x2={l.x} y2='13' stroke='gray'></line>
-          </>
+          <React.Fragment key={i}>
+            <text x={l.x+2} y='11'>{l.label}</text>
+            <line x1={l.x} y1='0' x2={l.x} y2='13' stroke='gray' strokeWidth='0.5'></line>
+          </React.Fragment>
         )})}
         { getDetailTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ return (
-          <>
-          <text key={'dt'+i} x={l.x+2} y='24'>{l.label}</text>
-          <line key={'dl'+i} x1={l.x} y1='13' x2={l.x} y2={height} stroke='gray'></line>
-          </>
+          <React.Fragment key={'d'+i}>
+            <text x={l.x+2} y='24'>{l.label}</text>
+            <line x1={l.x} y1='13' x2={l.x} y2={height} stroke='gray' strokeWidth='0.5'></line>
+          </React.Fragment>
         )})}        
         </g>
+      */}        
         <polyline points={d} fill='none' stroke='white' strokeWidth='1'/>
       </svg>
     </div>
-    <div>{cursorPosition}</div>
+    <div>{new Date((timeInterval.begin+cursorPosition*(timeInterval.end-timeInterval.begin)/width)*1000).toLocaleString()}</div>
     </>
   )
 }
