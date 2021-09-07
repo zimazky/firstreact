@@ -31,9 +31,12 @@ const timeUnits = [
   {value:345600, unit:'d', shift: timeZone*3600},	            //4d		1M		YYYY.MM
   {value:604800, unit:'w', shift: 3*24*3600+timeZone*3600},	  //1w		1M		YYYY.MM
   {value:1209600, unit:'w', shift: 3*24*3600+timeZone*3600},	//2w		1M		YYYY.MM
-  {value:31*86400, qt:86400, unit:'M', shift: null},	        //1M		1Y		YYYY
-//  {value:61*86400, qt:86400, unit:'2M', shift: null},	      //1M		1Y		YYYY
-//  {value:~~(365.2425*86400), qt:86400, unit:'Y', shift: null},//1Y	1Y		YYYY
+  {value:30.4375*86400, unit:'M', shift: 1},	                //1M		1Y		YYYY
+  {value:60.875*86400, unit:'M', shift: 2},	                  //2M		1Y		YYYY
+  {value:91.3125*86400, unit:'M', shift: 3},	                //3M		1Y		YYYY
+  {value:182.625*86400, unit: 'M', shift: 6},	                //6M		1Y		YYYY
+
+//  {value:~~(365.25*86400), unit:'Y', shift: null},//1Y	1Y		YYYY
 ]
 const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec']
 
@@ -45,7 +48,8 @@ const monthNames = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct',
 // maxTick    - максимальный интервал между делениями нижнего уровня шкалы 
 //              (детальный уровень) в пикселях
 //
-// Возвращает массив объектов { label, width }
+// Возвращает массив объектов { tick, label, width }
+// tick  - таймстемп деления
 // label - строковая метка деления шкалы
 // width - интервал в пикселях до следующей метки
 function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
@@ -56,7 +60,7 @@ function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
   const contextTicks = []
   let currentDate = new Date((startTime+timeZone*3600)*1000)
   let currentTick = startTime
-  if (timeUnits[i].unit == 'M') {
+  if (timeUnits[i].unit == 'M' ) {
     do {
       let yr = currentDate.getUTCFullYear()
       currentDate.setUTCHours(0)
@@ -65,11 +69,12 @@ function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
       currentDate.setUTCFullYear(yr+1,0,1)
       let nextCurrentTick = currentDate.getTime()/1000-timeZone*3600
       let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
-      contextTicks.push({label: yr, width})
+      contextTicks.push({tick: currentTick, label: yr, width})
       currentTick = nextCurrentTick
     } while(currentTick < endTime)
+    return contextTicks;
   }
-  else if (timeUnits[i].unit == 'd' || timeUnits[i].unit == 'w') {
+  if (timeUnits[i].unit == 'd' || timeUnits[i].unit == 'w') {
     do {
       let m = currentDate.getUTCMonth()+1
       let yr = currentDate.getUTCFullYear()
@@ -80,11 +85,12 @@ function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
       currentDate.setUTCMonth(m)
       let nextCurrentTick = currentDate.getTime()/1000-timeZone*3600
       let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
-      contextTicks.push({label: yr+'.'+((m<10)?'0':'')+m, width})
+      contextTicks.push({tick: currentTick, label: yr+'.'+((m<10)?'0':'')+m, width})
       currentTick = nextCurrentTick
     } while(currentTick < endTime)
+    return contextTicks;
   }
-  else if (timeUnits[i].unit == 'h') {
+  if (timeUnits[i].unit == 'h') {
     let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/86400+1))*86400-timeUnits[i].shift
     do {
       let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
@@ -92,12 +98,13 @@ function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
       let d = currentDate.getUTCDate()
       let m = currentDate.getUTCMonth()+1
       let yr = currentDate.getUTCFullYear()
-      contextTicks.push({label: yr+'.'+((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d, width})
+      contextTicks.push({tick: currentTick, label: yr+'.'+((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d, width})
       currentTick = nextCurrentTick
       nextCurrentTick+=86400
     } while(currentTick < endTime)
+    return contextTicks;
   }
-  else if (timeUnits[i].unit == 'm') {
+  if (timeUnits[i].unit == 'm') {
     let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/3600+1))*3600-timeUnits[i].shift
     do {
       let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
@@ -105,22 +112,24 @@ function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
       let hr = currentDate.getUTCHours()
       let d = currentDate.getUTCDate()
       let m = currentDate.getUTCMonth()+1
-      contextTicks.push({label: ((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d+' '+((hr<10)?'0':'')+hr+'h', width})
+      contextTicks.push({tick: currentTick, label: ((m<10)?'0':'')+m+'.'+((d<10)?'0':'')+d+' '+((hr<10)?'0':'')+hr+'h', width})
       currentTick = nextCurrentTick
       nextCurrentTick+=3600
     } while(currentTick < endTime)
+    return contextTicks;
   }
-  else if (timeUnits[i].unit == 's') {
+  if (timeUnits[i].unit == 's') {
     let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/60+1))*60-timeUnits[i].shift
     do {
       let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
       let currentDate = new Date((currentTick+timeZone*3600)*1000)
       let mi = currentDate.getUTCMinutes()
       let hr = currentDate.getUTCHours()
-      contextTicks.push({label: ((hr<10)?'0':'')+hr+':'+((mi<10)?'0':'')+mi, width})
+      contextTicks.push({tick: currentTick, label: ((hr<10)?'0':'')+hr+':'+((mi<10)?'0':'')+mi, width})
       currentTick = nextCurrentTick
       nextCurrentTick+=60
     } while(currentTick < endTime)
+    return contextTicks;
   }
   return contextTicks;
 }
@@ -133,7 +142,8 @@ function getContextTimeTickLabels( startTime, endTime, width, maxTick = 50) {
 // maxTick    - максимальный интервал между делениями нижнего уровня шкалы 
 //              (детальный уровень) в пикселях
 //
-// Возвращает массив объектов { label, width }
+// Возвращает массив объектов { tick, label, width }
+// tick  - таймстемп деления
 // label - строковая метка деления шкалы
 // width - интервал в пикселях до следующей метки
 function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
@@ -146,50 +156,78 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
   const detailTicks = []
   if (timeUnits[i].unit == 'M') {
     do {
-      let m = currentDate.getUTCMonth()+1
+      let m = currentDate.getUTCMonth()
       let yr = currentDate.getUTCFullYear()
       currentDate.setUTCHours(0)
       currentDate.setMinutes(0)
       currentDate.setSeconds(0)
       currentDate.setUTCDate(1)
-      currentDate.setUTCMonth(m)
+      currentDate.setUTCMonth(m + (timeUnits[i].shift - m%timeUnits[i].shift))
       let nextCurrentTick = currentDate.getTime()/1000-timeZone*3600
       let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
-      detailTicks.push({label: monthNames[m-1], width})
+      detailTicks.push({tick: currentTick, label: monthNames[m], width})
       currentTick = nextCurrentTick
     } while(currentTick < endTime)
+    return detailTicks
   }
-  else {
-    let tickInterval = timeUnits[i].value
-    let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/tickInterval+1))*tickInterval-timeUnits[i].shift
+  let tickInterval = timeUnits[i].value
+  let nextCurrentTick = (~~((startTime+timeUnits[i].shift)/tickInterval+1))*tickInterval-timeUnits[i].shift
+  if (timeUnits[i].unit == 's') {
     do {
       let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
       currentDate = new Date((currentTick+timeZone*3600)*1000)
-      if (timeUnits[i].unit == 's') {
-        let s = currentDate.getUTCSeconds()
-        detailTicks.push({label: ((s<10)?'0':'')+s+'\'\'', width})
-      }
-      else if (timeUnits[i].unit == 'm') {
-        let m = currentDate.getUTCMinutes()
-        detailTicks.push({label: ((m<10)?'0':'')+m+'\'', width})
-      }
-      else if (timeUnits[i].unit == 'h') {
-        let hr = currentDate.getUTCHours()
-        detailTicks.push({label: ((hr<10)?'0':'')+hr+'h', width})
-      }
-      else if (timeUnits[i].unit == 'd') {
-        let d = currentDate.getUTCDate()
-        detailTicks.push({label: ((d<10)?'0':'')+d, width})
-      }
-      else if (timeUnits[i].unit == 'w') {
-        let d = currentDate.getUTCDate();
-        detailTicks.push({label: ((d<10)?'0':'')+d, width})
-      }
+      let s = currentDate.getUTCSeconds()
+      detailTicks.push({tick: currentTick, label: ((s<10)?'0':'')+s+'\'\'', width})
       currentTick = nextCurrentTick
       nextCurrentTick += tickInterval
     } while(currentTick < endTime)
+    return detailTicks
   }
- return detailTicks
+  if (timeUnits[i].unit == 'm') {
+    do {
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      currentDate = new Date((currentTick+timeZone*3600)*1000)
+      let m = currentDate.getUTCMinutes()
+      detailTicks.push({tick: currentTick, label: ((m<10)?'0':'')+m+'\'', width})
+      currentTick = nextCurrentTick
+      nextCurrentTick += tickInterval
+    } while(currentTick < endTime)
+    return detailTicks
+  }
+  if (timeUnits[i].unit == 'h') {
+    do {
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      currentDate = new Date((currentTick+timeZone*3600)*1000)
+      let hr = currentDate.getUTCHours()
+      detailTicks.push({tick: currentTick, label: ((hr<10)?'0':'')+hr+'h', width})
+      currentTick = nextCurrentTick
+      nextCurrentTick += tickInterval
+    } while(currentTick < endTime)
+    return detailTicks
+  }
+  if (timeUnits[i].unit == 'd') {
+    do {
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      currentDate = new Date((currentTick+timeZone*3600)*1000)
+      let d = currentDate.getUTCDate()
+      detailTicks.push({tick: currentTick, label: ((d<10)?'0':'')+d, width})
+      currentTick = nextCurrentTick
+      nextCurrentTick += tickInterval
+    } while(currentTick < endTime)
+    return detailTicks
+  }
+  if (timeUnits[i].unit == 'w') {
+    do {
+      let width = nextCurrentTick<endTime ? (nextCurrentTick-currentTick)*scale : (endTime-currentTick)*scale
+      currentDate = new Date((currentTick+timeZone*3600)*1000)
+      let d = currentDate.getUTCDate();
+      detailTicks.push({tick: currentTick, label: ((d<10)?'0':'')+d, width})
+      currentTick = nextCurrentTick
+      nextCurrentTick += tickInterval
+    } while(currentTick < endTime)
+    return detailTicks
+  }
+  return detailTicks
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -261,16 +299,16 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, beg
     <>
     <div>{title}</div>
     <div className={styles.gridBox}>
-      <div className={styles.context}> { getContextTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ 
+      <div className={styles.context}> { getContextTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l)=>{ 
         return (
-          <div className={styles.contextTickLabels} key={i} style={{width: l.width}}>{l.label}</div>
+          <div className={styles.contextTickLabels} key={l.tick} style={{width: l.width}}>{l.label}</div>
         )})
       }
       </div>
       <div className={styles.detail} style={{height: height+12}}> { 
-        getDetailTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l,i)=>{ 
+        getDetailTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l)=>{ 
         return (
-          <div className={styles.detailTickLabels} key={i} style={{width: l.width, height: height+12}}>{l.label}</div>
+          <div className={styles.detailTickLabels} key={l.tick} style={{width: l.width, height: height+12}}>{l.label}</div>
         )})
       }
       </div>
@@ -279,7 +317,7 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, beg
         {children}
       </svg>
     </div>
-    <div>{new Date((timeInterval.begin+cursorPosition*(timeInterval.end-timeInterval.begin)/width)*1000).toLocaleString()}</div>
+    <div>{/*new Date((timeInterval.begin+cursorPosition*(timeInterval.end-timeInterval.begin)/width)*1000).toLocaleString()*/}</div>
     </>
   )
 }

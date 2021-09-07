@@ -29,6 +29,8 @@
   left: 0;
   right: 0;
   bottom: 0;
+  cursor: default;
+  user-select: none;
 }
 
 .Modal-module_modalWindow_a4aa26e {
@@ -48,6 +50,7 @@
 .Modal-module_modalBody_e10262b,
 .Modal-module_modalFooter_f041013 {
   padding: 10px 10px;
+  text-align: center;
 }
 
 .Modal-module_modalHeader_fa40903 {
@@ -105,7 +108,18 @@
 .ParameterButton-module_value_beb9422{
 	font-size: 25px
 }
-
+.ParameterButton-module_modal_parameter__7b683e, .ParameterButton-module_modal_button_fde7e68 {
+	font-size: 28px;
+	font-weight: bold;
+	padding: 0 16px;
+}
+.ParameterButton-module_modal_button_fde7e68 {
+	color: #bbb;
+  cursor: pointer;
+}
+.ParameterButton-module_modal_button_fde7e68:hover {
+	color: #000;
+}
 .TemperatureControl-module_controlbox_dee125d{
 	width: 262px;
 	margin:0 0 10px 0;
@@ -116,6 +130,40 @@
 	margin:0 0 5px 0;
 }
 
+.Diagram-module_gridBox__7bb01a {
+  border: 1px solid white;
+  display: inline-block;
+  position: relative;
+  user-select: none;
+}
+.Diagram-module_context__21983f, .Diagram-module_detail__874e20 {
+  height: 12px;
+  overflow: clip;
+}
+.Diagram-module_context__21983f {
+  border-bottom: solid 1px gray;
+}
+.Diagram-module_contextTickLabels_e32f42e, .Diagram-module_detailTickLabels__a93b19 {
+  position: relative;
+  display: inline-block;
+  font-size: 10px;
+  border-left: solid 1px gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.Diagram-module_contextTickLabels_e32f42e:hover, .Diagram-module_detailTickLabels__a93b19:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.Diagram-module_contextTickLabels_e32f42e:first-child, .Diagram-module_detailTickLabels__a93b19:first-child {
+  border-left: none;
+}
+.Diagram-module_svgBox_d334579 {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0);
+  left: 0;
+  top: 24px;
+}
 * {
 	padding: 0;
 	margin: 0;
