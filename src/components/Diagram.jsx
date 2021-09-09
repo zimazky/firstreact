@@ -1,5 +1,7 @@
 //import TimeInterval from '../TimeInterval.js'
+import Button from './Button.jsx'
 import styles from './Diagram.module.css'
+import { useTimeInterval } from './TimeIntervalContext.jsx'
 
 const timeZone = 3
 const timeUnits = [
@@ -232,9 +234,9 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Компонент временной диаграмы
-export default function Diagram({title='TimeDiagram', width=300, height=200, begin, end, children=null}) {
+export default function Diagram({title='TimeDiagram', width=300, height=200, children=null}) {
 
-  const [timeInterval, setTimeInterval] = React.useState({begin, end})
+  const {timeInterval,updateTimeInterval} = useTimeInterval()
   const [cursorPosition, setCursorPosition] = React.useState(0)
   const diagramElement = React.useRef(null);
   /////////////////////////////////////////////////////////////////////////////
@@ -249,12 +251,9 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, beg
   function onMouseMove(e) {
     //e.preventDefault()
     if (isDragging) {
-      let d = e.offsetX-clientX0
+      let d = (e.offsetX-clientX0)/width
       clientX0 = e.offsetX
-      setTimeInterval((prevTimeInterval)=>{
-        let tstep = (prevTimeInterval.end-prevTimeInterval.begin)/width
-        return { begin: prevTimeInterval.begin-tstep*d, end: prevTimeInterval.end-tstep*d }
-      })
+      updateTimeInterval({type:'shift',value:d})
     }
     setCursorPosition(e.offsetX)
   }
@@ -266,12 +265,7 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, beg
     e.preventDefault()
     let z = e.wheelDelta>0 ? 0.9 : 1.1111111111111112
     let k = (e.offsetX)/width
-    setTimeInterval((prevTimeInterval)=>{
-      let d = z*(prevTimeInterval.end-prevTimeInterval.begin)
-      if ( d < 300 ) return prevTimeInterval
-      let t = prevTimeInterval.begin+k*(prevTimeInterval.end-prevTimeInterval.begin)
-      return { begin: t-z*(t-prevTimeInterval.begin), end: t+z*(prevTimeInterval.end-t)}
-    })
+    updateTimeInterval({type:'zoom',value:z,offset:k})
   }
   function onMouseOut(e) {
     setCursorPosition(0)
@@ -297,16 +291,18 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, beg
 
   return (
     <>
-    <div>{title}</div>
+    <div className={styles.header} style={{width: width}}><div>{title}</div>
+    {/*<div ><Button>{'⇔'}</Button><Button>{'{...}'}</Button></div>*/}
+    </div>
     <div className={styles.gridBox}>
-      <div className={styles.context}> { getContextTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l)=>{ 
+      <div className={styles.context}> { getContextTimeTickLabels(timeInterval.begin,timeInterval.end,width,50).map(l=>{ 
         return (
           <div className={styles.contextTickLabels} key={l.tick} style={{width: l.width}}>{l.label}</div>
         )})
       }
       </div>
       <div className={styles.detail} style={{height: height+12}}> { 
-        getDetailTimeTickLabels(timeInterval.begin,timeInterval.end,300,50).map((l)=>{ 
+        getDetailTimeTickLabels(timeInterval.begin,timeInterval.end,width,50).map(l=>{ 
         return (
           <div className={styles.detailTickLabels} key={l.tick} style={{width: l.width, height: height+12}}>{l.label}</div>
         )})
@@ -317,7 +313,7 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, beg
         {children}
       </svg>
     </div>
-    <div>{/*new Date((timeInterval.begin+cursorPosition*(timeInterval.end-timeInterval.begin)/width)*1000).toLocaleString()*/}</div>
+    <div>{new Date((timeInterval.begin+cursorPosition*(timeInterval.end-timeInterval.begin)/width)*1000).toLocaleString()}</div>
     </>
   )
 }
