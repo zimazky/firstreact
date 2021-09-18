@@ -1,5 +1,6 @@
 import { IrregularFloatDataset } from '../irregularDS.js';
 import Diagram from './Diagram.jsx'
+import SteppedLine from './SteppedLine.jsx'
 import Line from './Line.jsx'
 import { TimeIntervalProvider } from './TimeIntervalContext.jsx'
 
@@ -293,43 +294,54 @@ let zones = []
 let ti = {}
 ti.end = new Date('2021.08.07')/1000
 ti.begin = ti.end-2*24*3600
+const width = 300
+const barw = 1
 
 export default function TemperatureZonesDiagrams() {
   
-  //let dataSet = [15,18,14,13,15,20,21,25,29,24,25,22,10,12,9,8,6,3,5,4,8,7]
-
-  const [dataset,setDataset] = React.useState({})
+  const [timeInterval, setTimeInterval] = React.useState(ti)
+  const [dataset, setDataset] = React.useState({})
 
   let numberOfZones = 3
   React.useEffect(()=>{
-    let width = 300
-    let tstep = (ti.end-ti.begin)/width
-  
     zones.push(new ArduinoZone('./log/',2,'white','white','red'))
     zones[0].onload = ()=>{
-        let newDataset = zones[0].getzdata(ti,tstep)
-        console.log('newDataset after load',newDataset)
-        setDataset(newDataset)
-      }
-    let newDataset=zones[0].getzdata(ti,tstep)
-    console.log('dataset',newDataset)
+      setTimeInterval((prevTimeInterval)=>{
+        return { begin: prevTimeInterval.begin, end: prevTimeInterval.end }
+      })
+    }
   },[])
 
+  React.useEffect(()=>{
+    let tstep = (barw*(timeInterval.end-timeInterval.begin)/width)
+    let newDataset=zones[0].getzdata(timeInterval,tstep)
+    setDataset(newDataset)
+  },[timeInterval])
+
+  function onShift(d) {
+    setTimeInterval((prevTimeInterval)=>{
+      let interval = prevTimeInterval.end-prevTimeInterval.begin
+      return { begin: prevTimeInterval.begin-interval*d, end: prevTimeInterval.end-interval*d }
+    })
+  }
+
+  function onZoom(z,k) {
+    setTimeInterval((prevTimeInterval)=>{
+      let interval = prevTimeInterval.end-prevTimeInterval.begin
+      if ( z*interval < 300 ) return prevTimeInterval
+      let timeOffset = prevTimeInterval.begin+k*interval
+      return { begin: timeOffset-z*(timeOffset-prevTimeInterval.begin), end: timeOffset+z*(prevTimeInterval.end-timeOffset)}
+    })
+  }
 
   return (
     <div>
-      <TimeIntervalProvider initTimeInterval={ti}>
-        <Diagram>
-          {dataset.t && <Line data={dataset.t.zdata} height={200} min={dataset.t.min} max={dataset.t.max}/>}
-        </Diagram>
-        <Diagram>
-          {dataset.h && <Line data={dataset.h.zdata} height={200} min={dataset.h.min} max={dataset.h.max}/>}
-        </Diagram>
-      </TimeIntervalProvider>
-      <TimeIntervalProvider initTimeInterval={ti}>
-        <Diagram title='Another time interval'>
-        </Diagram>
-      </TimeIntervalProvider>
+      <Diagram timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
+        {dataset.t && <SteppedLine data={dataset.t.zdata} height={200} min={dataset.t.min} max={dataset.t.max} barw={barw}/>}
+      </Diagram>
+      <Diagram timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
+        {dataset.h && <Line data={dataset.h.zdata} height={200} min={dataset.h.min} max={dataset.h.max} barw={barw}/>}
+      </Diagram>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import styles from './Diagram.module.css'
-import { useTimeInterval } from './TimeIntervalContext.jsx'
+//import { useTimeInterval } from './TimeIntervalContext.jsx'
 
 const timeZone = 3
 const timeUnits = [
@@ -232,9 +232,9 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Компонент временной диаграмы
-export default function Diagram({title='TimeDiagram', width=300, height=200, children=null}) {
+export default function Diagram({title='TimeDiagram', width=300, height=200, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}}) {
 
-  const {timeInterval,updateTimeInterval} = useTimeInterval()
+//  const {timeInterval,updateTimeInterval} = useTimeInterval()
   const [cursorPosition, setCursorPosition] = React.useState(0)
   const diagramElement = React.useRef(null);
   /////////////////////////////////////////////////////////////////////////////
@@ -247,11 +247,11 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, chi
     clientX0 = e.offsetX
   }
   function onMouseMove(e) {
-    //e.preventDefault()
     if (isDragging) {
       let d = (e.offsetX-clientX0)/width
       clientX0 = e.offsetX
-      updateTimeInterval({type:'shift',value:d})
+      onShift(d)
+      //updateTimeInterval({type:'shift',value:d})
     }
     setCursorPosition(e.offsetX)
   }
@@ -263,7 +263,8 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, chi
     e.preventDefault()
     let z = e.wheelDelta>0 ? 0.9 : 1.1111111111111112
     let k = (e.offsetX)/width
-    updateTimeInterval({type:'zoom',value:z,offset:k})
+    onZoom(z,k)
+    //updateTimeInterval({type:'zoom',value:z,offset:k})
   }
   function onMouseOut(e) {
     setCursorPosition(0)
