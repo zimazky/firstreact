@@ -1,5 +1,3 @@
-//import TimeInterval from '../TimeInterval.js'
-import Button from './Button.jsx'
 import styles from './Diagram.module.css'
 import { useTimeInterval } from './TimeIntervalContext.jsx'
 
