@@ -231,8 +231,49 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Функция получения массива меток шкалы Y
+// min        - минимальное значение
+// max        - максимальное значение
+// height     - высота шкалы Y в пикселях
+// minTick    - минимальный интервал между делениями шкалы Y
+//
+// Возвращает массив объектов { tick, label, height }
+// tick  - значение Y деления
+// label - строковая метка деления шкалы
+// height - интервал в пикселях до следующей метки
+function getYTickLabels(min, max, height, minTick=20) {
+  let dy = minTick*(max-min)/height  // ориентировочный минимальный размер деления
+  let dign = Math.round(Math.log(dy)/Math.log(10)) // округленнный десятичный логарифм ориентировочного деления
+  let powlog = Math.pow(10,dign) // порядок деления (0.01,0.1,100,..)
+  let mant = dy/powlog // мантисса ориентировочного размера деления
+  // Приведенный размер деления (1, 2, 5) - мантисса деления
+  if( mant <= 1 ) mant = 1
+  //else if( mant <= 1.25 ) { mant = 1.25; dign-=2; }
+  else if( mant <= 2 ) mant = 2
+  //else if( mant <= 2.5 ) { mant = 2.5; dign--; }
+  else if( mant <= 5 ) mant = 5
+  else { mant = 10; dign++; }
+  dign = dign<0?-dign:0 // число знаков после запятой
+  let step = powlog*mant // размер деления
+  let scale = height/(max-min)
+
+  let yLabels = []
+  let currentTick = max
+  let nextCurrentTick = step*(~~(max/step))
+  do {
+    let height = nextCurrentTick>min ? scale*(currentTick-nextCurrentTick) : scale*(currentTick-min)
+    height>0 && yLabels.push({tick: currentTick, label: currentTick.toFixed(dign), height})
+    currentTick = nextCurrentTick
+    nextCurrentTick -= step
+  } while(currentTick > min)
+  
+  return yLabels
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Компонент временной диаграмы
-export default function TimeDiagram({title='TimeDiagram', width=300, height=200, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}}) {
+export default function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, max=1, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}}) {
 
 //  const {timeInterval,updateTimeInterval} = useTimeInterval()
   const [cursorPosition, setCursorPosition] = React.useState(0)
@@ -305,6 +346,14 @@ export default function TimeDiagram({title='TimeDiagram', width=300, height=200,
         return (
           <div className={styles.detailTickLabels} key={l.tick} style={{width: l.width, height: height+12}}>{l.label}</div>
         )})
+      }
+      </div>
+      <div className={styles.yLabels} style={{width:300, height:200}}> {
+        getYTickLabels(min,max,height).map((l,i)=>{ 
+          return (
+            <div className={styles.yTickLabels} key={i} style={{height: l.height}}>{l.label}</div>
+          )
+        })
       }
       </div>
       <svg ref={diagramElement} width={width} height={height} viewBox={'0 0 ' + width + ' ' + height} 

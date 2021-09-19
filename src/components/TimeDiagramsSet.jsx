@@ -345,12 +345,11 @@ export default function TimeDiagramsSet() {
   return (
     <div className={classes.wrapper}>
       <div className={classes.diagramsColumn}>
-        <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
+        <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} min={tMin} max={tMax}>
           {dataset[0] && <Line data={dataset[0].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#ffa23c'/>}
 					{dataset[1] && <Line data={dataset[1].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#88a23c'/>}
         </TimeDiagram>
-				{dataset[0] && <YTickLabels min={tMin} max={tMax} height={200} maxTick={20}/>}
-        <TimeDiagram title='Humidity, %' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
+        <TimeDiagram title='Humidity, %' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} min={hMin} max={hMax}>
           {dataset[0] && <Line data={dataset[0].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#bbb'/>}
           {dataset[1] && <Line data={dataset[1].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#88bbbb'/>}
         </TimeDiagram>
