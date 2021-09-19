@@ -1,4 +1,4 @@
-import styles from './Diagram.module.css'
+import styles from './TimeDiagram.module.css'
 //import { useTimeInterval } from './TimeIntervalContext.jsx'
 
 const timeZone = 3
@@ -232,7 +232,7 @@ function getDetailTimeTickLabels( startTime, endTime, width, maxTick = 50) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Компонент временной диаграмы
-export default function Diagram({title='TimeDiagram', width=300, height=200, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}}) {
+export default function TimeDiagram({title='TimeDiagram', width=300, height=200, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}}) {
 
 //  const {timeInterval,updateTimeInterval} = useTimeInterval()
   const [cursorPosition, setCursorPosition] = React.useState(0)
@@ -312,7 +312,7 @@ export default function Diagram({title='TimeDiagram', width=300, height=200, chi
         {children}
       </svg>
     </div>
-    <div>{new Date((timeInterval.begin+cursorPosition*(timeInterval.end-timeInterval.begin)/width)*1000).toLocaleString()}</div>
+    <div style={{width: width}}>{new Date((timeInterval.begin+cursorPosition*(timeInterval.end-timeInterval.begin)/width)*1000).toLocaleString()}</div>
     </>
   )
 }

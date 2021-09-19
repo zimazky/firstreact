@@ -1,8 +1,8 @@
 import { IrregularFloatDataset } from '../irregularDS.js';
-import Diagram from './Diagram.jsx'
-import SteppedLine from './SteppedLine.jsx'
-import Line from './Line.jsx'
-import { TimeIntervalProvider } from './TimeIntervalContext.jsx'
+import TimeDiagram from './TimeDiagram.jsx'
+import {Line, SteppedLine, YTickLabels} from './Graphs.jsx'
+import classes from './TimeDiagramsSet.module.css'
+//import { TimeIntervalProvider } from './TimeIntervalContext.jsx'
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -297,24 +297,27 @@ ti.begin = ti.end-2*24*3600
 const width = 300
 const barw = 1
 
-export default function TemperatureZonesDiagrams() {
+export default function TimeDiagramsSet() {
   
   const [timeInterval, setTimeInterval] = React.useState(ti)
-  const [dataset, setDataset] = React.useState({})
+  const [dataset, setDataset] = React.useState([])
+  const [selectedDate, setSelectedDate] = React.useState(0)
 
   let numberOfZones = 3
   React.useEffect(()=>{
     zones.push(new ArduinoZone('./log/',2,'white','white','red'))
-    zones[0].onload = ()=>{
+		zones.push(new ArduinoZone('./log/',3,'white','white','red'))
+
+    zones.forEach((v)=>{v.onload = ()=>{
       setTimeInterval((prevTimeInterval)=>{
         return { begin: prevTimeInterval.begin, end: prevTimeInterval.end }
       })
-    }
+		}})
   },[])
 
   React.useEffect(()=>{
     let tstep = (barw*(timeInterval.end-timeInterval.begin)/width)
-    let newDataset=zones[0].getzdata(timeInterval,tstep)
+    let newDataset=zones.map(v=>v.getzdata(timeInterval,tstep))
     setDataset(newDataset)
   },[timeInterval])
 
@@ -334,14 +337,36 @@ export default function TemperatureZonesDiagrams() {
     })
   }
 
+	let tMin = Math.min(...dataset.map(v=>v.t.min))
+	let tMax = Math.max(...dataset.map(v=>v.t.max))
+	let hMin = Math.min(...dataset.map(v=>v.h.min))
+	let hMax = Math.max(...dataset.map(v=>v.h.max))
+
   return (
-    <div>
-      <Diagram timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
-        {dataset.t && <SteppedLine data={dataset.t.zdata} height={200} min={dataset.t.min} max={dataset.t.max} barw={barw}/>}
-      </Diagram>
-      <Diagram timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
-        {dataset.h && <Line data={dataset.h.zdata} height={200} min={dataset.h.min} max={dataset.h.max} barw={barw}/>}
-      </Diagram>
+    <div className={classes.wrapper}>
+      <div className={classes.diagramsColumn}>
+        <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
+          {dataset[0] && <Line data={dataset[0].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#ffa23c'/>}
+					{dataset[1] && <Line data={dataset[1].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#88a23c'/>}
+        </TimeDiagram>
+				{dataset[0] && <YTickLabels min={tMin} max={tMax} height={200} maxTick={20}/>}
+        <TimeDiagram title='Humidity, %' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom}>
+          {dataset[0] && <Line data={dataset[0].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#bbb'/>}
+          {dataset[1] && <Line data={dataset[1].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#88bbbb'/>}
+        </TimeDiagram>
+      </div>
+      <div className={classes.tableColumn}>
+				<table>
+					<thead><tr>
+						<th className={classes.timeColumn}>time</th>
+						<th className={classes.temperatureColumn}>temperature</th>
+						<th className={classes.humidityColumn}>humidity</th>
+					</tr></thead>
+					<tbody>
+						<tr><td>0</td><td>0</td><td>0</td></tr>
+					</tbody>
+				</table>
+      </div>
     </div>
   )
 }

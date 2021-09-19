@@ -1,0 +1,24 @@
+/*
+.wrapper {
+
+}
+*/
+.diagramsColumn {
+  display: inline-block;
+}
+.tableColumn {
+  display: inline-block;
+  vertical-align: top;
+}
+th {
+  font-weight: normal;
+}
+.timeColumn {
+  width: 50px;
+}
+.temperatureColumn {
+  width: 50px;
+}
+.humidityColumn {
+  width: 50px;
+}

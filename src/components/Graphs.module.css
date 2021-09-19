@@ -1,0 +1,17 @@
+.YLabels {
+  width: 30px;
+  overflow: clip;
+}
+.YTickLabels {
+  position: relative;
+  font-size: 10px;
+  border-top: solid 1px gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/*
+.YTickLabels:first-child {
+  color: transparent;
+}
+*/

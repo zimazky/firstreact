@@ -1,5 +1,5 @@
 import TemperatureControl from './TemperatureControl.jsx'
-import TemperatureZonesDiagrams from './TemperatureZonesDiagrams.jsx'
+import TimeDiagramsSet from './TimeDiagramsSet.jsx'
 
 export default function () {
   let zones = [
@@ -12,9 +12,9 @@ export default function () {
 
   return (
     <>
-      <TemperatureZonesDiagrams>
+      <TimeDiagramsSet>
 
-      </TemperatureZonesDiagrams>
+      </TimeDiagramsSet>
       <div>
         {state.map((zone, index) => <TemperatureControl key={index} zone={zone} update={(modifyedZone)=>{setState(state.map((rec)=>{console.log(modifyedZone); return (rec.id==modifyedZone.id)?modifyedZone:rec}))}}/>)}
       </div>
