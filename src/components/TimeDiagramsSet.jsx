@@ -1,6 +1,6 @@
 import { IrregularFloatDataset } from '../irregularDS.js';
 import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
-import Table from './Table.jsx'
+import {TimeTable} from './Table.jsx'
 import classes from './TimeDiagramsSet.module.css'
 //import { TimeIntervalProvider } from './TimeIntervalContext.jsx'
 
@@ -361,7 +361,7 @@ export default function TimeDiagramsSet() {
       </div>
       <div className={classes.tableColumn}>
 				{/* <div>{new Date(selectedDate*1000).toLocaleString()}</div> */}
-				{selectedDate!=0 && <Table 
+				{selectedDate!=0 && <TimeTable 
 					header={[{key:'flag',name:'flag'},{key:'time',name:'time'},{key:'value',name:'temperature'}]}
 					data={zones[0].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600].t.data}
 				/>}
