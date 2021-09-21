@@ -1,6 +1,6 @@
 import { IrregularFloatDataset } from '../irregularDS.js';
-import TimeDiagram from './TimeDiagram.jsx'
-import {Line, SteppedLine, YTickLabels} from './Graphs.jsx'
+import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
+import Table from './Table.jsx'
 import classes from './TimeDiagramsSet.module.css'
 //import { TimeIntervalProvider } from './TimeIntervalContext.jsx'
 
@@ -313,7 +313,7 @@ export default function TimeDiagramsSet() {
         return { begin: prevTimeInterval.begin, end: prevTimeInterval.end }
       })
 		}})
-  },[])
+  },[])	
 
   React.useEffect(()=>{
     let tstep = (barw*(timeInterval.end-timeInterval.begin)/width)
@@ -337,34 +337,34 @@ export default function TimeDiagramsSet() {
     })
   }
 
+	function onSelectDate(date) {
+		setSelectedDate(date)
+	}
+
 	let tMin = Math.min(...dataset.map(v=>v.t.min))
 	let tMax = Math.max(...dataset.map(v=>v.t.max))
 	let hMin = Math.min(...dataset.map(v=>v.h.min))
 	let hMax = Math.max(...dataset.map(v=>v.h.max))
+	//if(selectedDate!=0) console.log(zones[0].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600])
 
   return (
     <div className={classes.wrapper}>
       <div className={classes.diagramsColumn}>
-        <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} min={tMin} max={tMax}>
+        <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} onSelectDate={onSelectDate} min={tMin} max={tMax}>
           {dataset[0] && <Line data={dataset[0].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#ffa23c'/>}
 					{dataset[1] && <Line data={dataset[1].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#88a23c'/>}
         </TimeDiagram>
-        <TimeDiagram title='Humidity, %' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} min={hMin} max={hMax}>
+        <TimeDiagram title='Humidity, %' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} onSelectDate={onSelectDate} min={hMin} max={hMax}>
           {dataset[0] && <Line data={dataset[0].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#bbb'/>}
           {dataset[1] && <Line data={dataset[1].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#88bbbb'/>}
         </TimeDiagram>
       </div>
       <div className={classes.tableColumn}>
-				<table>
-					<thead><tr>
-						<th className={classes.timeColumn}>time</th>
-						<th className={classes.temperatureColumn}>temperature</th>
-						<th className={classes.humidityColumn}>humidity</th>
-					</tr></thead>
-					<tbody>
-						<tr><td>0</td><td>0</td><td>0</td></tr>
-					</tbody>
-				</table>
+				{/* <div>{new Date(selectedDate*1000).toLocaleString()}</div> */}
+				{selectedDate!=0 && <Table 
+					header={[{key:'flag',name:'flag'},{key:'time',name:'time'},{key:'value',name:'temperature'}]}
+					data={zones[0].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600].t.data}
+				/>}
       </div>
     </div>
   )
