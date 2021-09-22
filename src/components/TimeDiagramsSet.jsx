@@ -359,13 +359,19 @@ export default function TimeDiagramsSet() {
           {dataset[1] && <Line data={dataset[1].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#88bbbb'/>}
         </TimeDiagram>
       </div>
+			{selectedDate!=0 && 
       <div className={classes.tableColumn}>
-				{/* <div>{new Date(selectedDate*1000).toLocaleString()}</div> */}
-				{selectedDate!=0 && <TimeTable 
-					header={[{key:'flag',name:'flag'},{key:'time',name:'time'},{key:'value',name:'temperature'}]}
+				<TimeTable 
 					data={zones[0].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600].t.data}
-				/>}
+					time={selectedDate}
+				/>
+				<TimeTable 
+					data={zones[1].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600].t.data}
+					time={selectedDate}
+
+				/>
       </div>
+			}
     </div>
   )
 }
