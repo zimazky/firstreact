@@ -13,18 +13,22 @@ export default function Table({header = [], data = [], width=300, height=500, ro
     </div>
   )
 }
-
 // headerName
 // data = [{time,value}]
 const colId = {width:35}
 const colTime = {width:60}
 const colValue = {width:30}
 export function TimeTable({title = 'Table', headerName = 'value', data = [], time, height=200}) {
-  const [t,setTime] = React.useState(time)
   const [row,setRow] = React.useState(data.findIndex(v=>v.time>=time))
-  let crow = data.findIndex(v=>v.time>=time)
-  if(crow!=row) setRow(crow)
-  console.log(crow)
+  const refTime = React.useRef(time)
+  if(refTime.current!=time) { 
+    refTime.current = time
+    let crow = data.findIndex(v=>v.time>=time)
+    console.log(crow,row)
+    setRow(crow)
+    console.log(refTime.current)
+  }
+
   let rows = ~~(height/12)
   let totalRows = data.length
   let thumbHeight = height*(rows/totalRows)
@@ -33,10 +37,12 @@ export function TimeTable({title = 'Table', headerName = 'value', data = [], tim
 
   function pgUp(e) {
     e.stopPropagation()
-    setRow(prevRow=>prevRow-rows)
+    setRow(v=>v-rows)
+    //dispatch({type: 'changeRow', value: -rows})
   }
   function pgDown(e) {
-    setRow(prevRow=>prevRow+rows)
+    setRow(v=>v+rows)
+    //dispatch({type: 'changeRow', value: rows})
   }
   return (
     <>
