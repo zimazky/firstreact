@@ -1,4 +1,4 @@
-.Button-module_button__be17e0 {
+.button__be17e0 {
 	display:inline-block;
 	border: 1px solid;
 	border-radius: 3px;
@@ -7,22 +7,22 @@
 	margin: 0;
 	cursor: pointer;
 }
-.Button-module_button__be17e0:active, .Button-module_button__be17e0.Button-module_active__6dea37, .Button-module_button__be17e0.Button-module_active__6dea37:hover {
+.button__be17e0:active, .button__be17e0.active__6dea37, .button__be17e0.active__6dea37:hover {
 	background-color: #F49B25;
 	text-shadow: none;
 	color: #fff;
 }
-.Button-module_button__be17e0:hover {
+.button__be17e0:hover {
 	background-color: #fff;
 	text-shadow: none;
 	color: #000;
 }
-.Button-module_button__be17e0[disabled] {
+.button__be17e0[disabled] {
   opacity: .5;
   cursor: not-allowed;
 }
 
-.Modal-module_modalOverlay_f9c4b7b {
+.modalOverlay_f9c4b7b {
   background-color: rgba(0,0,0,0.5);
   position: fixed;
   top: 0;
@@ -33,7 +33,7 @@
   user-select: none;
 }
 
-.Modal-module_modalWindow_a4aa26e {
+.modalWindow_a4aa26e {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -46,14 +46,14 @@
   justify-content: space-between;  
 }
 
-.Modal-module_modalHeader_fa40903,
-.Modal-module_modalBody_e10262b,
-.Modal-module_modalFooter_f041013 {
+.modalHeader_fa40903,
+.modalBody_e10262b,
+.modalFooter_f041013 {
   padding: 10px 10px;
   text-align: center;
 }
 
-.Modal-module_modalHeader_fa40903 {
+.modalHeader_fa40903 {
   min-height: 60px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   display: flex;
@@ -62,22 +62,22 @@
   align-items: center;
 }
 
-.Modal-module_modalTitle__07e9f4 {
+.modalTitle__07e9f4 {
   font-size: 15px;
   font-weight: bold;
 }
 
-.Modal-module_modalFooter_f041013 {
+.modalFooter_f041013 {
   display: flex;
   justify-content: flex-end;
   align-items: center;
 }
 
-.Modal-module_modalFooter_f041013 *:last-child {
+.modalFooter_f041013 *:last-child {
   margin-left: 5px;
 }
 
-.Modal-module_apply__17fe28, .Modal-module_cancel__3cd4e5 {
+.apply__17fe28, .cancel__3cd4e5 {
   outline: none;
 	display:inline-block;
   border: 1px solid rgba(0, 0, 0, 0.2);
@@ -89,61 +89,75 @@
   cursor: pointer;
 }
 
-.Modal-module_apply__17fe28:hover, .Modal-module_cancel__3cd4e5:hover {
+.apply__17fe28:hover, .cancel__3cd4e5:hover {
   background-color: #70B4E6;
 }
 
-.Modal-module_apply__17fe28 {
+.apply__17fe28 {
   background-color: #7CC6fE;
   color: #000;
 }
 
-.Modal-module_cancel__3cd4e5 {
+.cancel__3cd4e5 {
   background-color: #FFF;
   color: #000;
 }
-.ParameterButton-module_name__b2ecc9{
+.name__b2ecc9{
 	padding: 3px 0 0 0;
 }
-.ParameterButton-module_value_beb9422{
+.value_beb9422{
 	font-size: 25px
 }
-.ParameterButton-module_modal_parameter__7b683e, .ParameterButton-module_modal_button_fde7e68 {
+.modal_parameter__7b683e, .modal_button_fde7e68 {
 	font-size: 28px;
 	font-weight: bold;
 	padding: 0 16px;
 }
-.ParameterButton-module_modal_button_fde7e68 {
+.modal_button_fde7e68 {
 	color: #bbb;
   cursor: pointer;
 }
-.ParameterButton-module_modal_button_fde7e68:hover {
+.modal_button_fde7e68:hover {
 	color: #000;
 }
-.TemperatureControl-module_controlbox_dee125d{
+.controlbox_dee125d{
 	width: 262px;
 	margin:0 0 10px 0;
 }
-.TemperatureControl-module_header_b192608{
+.header_b192608{
 	background-color: #555555; 
 	padding:2px;
 	margin:0 0 5px 0;
 }
 
-.Diagram-module_gridBox__7bb01a {
+/*
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.icon {
+  border: solid 1px gray;
+}
+.icon:hover {
+  background-color: gray;
+}
+*/
+
+.gridBox__3c3842 {
   border: 1px solid white;
   display: inline-block;
   position: relative;
   user-select: none;
 }
-.Diagram-module_context__21983f, .Diagram-module_detail__874e20 {
+.context__238bd7, .detail__623713 {
   height: 12px;
   overflow: clip;
 }
-.Diagram-module_context__21983f {
+.context__238bd7 {
   border-bottom: solid 1px gray;
 }
-.Diagram-module_contextTickLabels_e32f42e, .Diagram-module_detailTickLabels__a93b19 {
+.contextTickLabels__a22019, .detailTickLabels_f2b262b {
   position: relative;
   display: inline-block;
   font-size: 10px;
@@ -152,17 +166,102 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.Diagram-module_contextTickLabels_e32f42e:hover, .Diagram-module_detailTickLabels__a93b19:hover {
+.contextTickLabels__a22019:hover, .detailTickLabels_f2b262b:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
-.Diagram-module_contextTickLabels_e32f42e:first-child, .Diagram-module_detailTickLabels__a93b19:first-child {
+.contextTickLabels__a22019:first-child, .detailTickLabels_f2b262b:first-child {
   border-left: none;
 }
-.Diagram-module_svgBox_d334579 {
+.svgBox__6413b8 {
   position: absolute;
   background-color: rgba(255, 255, 255, 0);
   left: 0;
   top: 24px;
+}
+.yLabels_f446653 {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0);
+  left: 0;
+  top: 24px;
+  overflow: clip;
+}
+.yTickLabels_d4886a5 {
+  position: relative;
+  font-size: 10px;
+  border-top: solid 1px gray;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  padding-right: 2px;
+}
+.wrapper__dd2345 {
+  /*overflow-y: scroll;*/
+  border: 1px solid white;
+  display: inline-block;
+  position: relative;
+}
+.table__d9fc4c {
+  display: inline-block;
+}
+.scrollbarTrack__76cd16 {
+  float: right;
+  position: relative;
+  width: 3px;
+  right: 0;
+  height: 100%;
+  margin-right: 2px;
+}
+.scrollbarTrack__76cd16:hover {
+  background-color: rgba(255,255,255,0.1)
+}
+.scrollbarUp_d40a0b1 {
+  position: relative;
+  top: 0;
+  width: 3px;
+}
+.scrollbarThumb__06fed1 {
+  position: relative;
+  left: 0;
+  width: 3px;
+  background-color: rgba(255,255,255,0.3)
+}
+.scrollbarThumb__06fed1:hover {
+  background-color: rgba(255,255,255,0.6)
+}
+.row__028608 {
+  height: 12px;
+	font-size: 10px;
+}
+.row__028608 span {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/*
+.wrapper {
+
+}
+*/
+.diagramsColumn__15a5e1 {
+  display: inline-block;
+}
+.tableColumn_a87e4a5 {
+  display: inline-block;
+  vertical-align: top;
+}
+th {
+  font-weight: normal;
+}
+.timeColumn_e14da77 {
+  width: 50px;
+}
+.temperatureColumn_c876802 {
+  width: 50px;
+}
+.humidityColumn__ba2d1e {
+  width: 50px;
 }
 * {
 	padding: 0;

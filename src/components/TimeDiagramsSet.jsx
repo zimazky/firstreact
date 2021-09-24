@@ -346,7 +346,7 @@ export default function TimeDiagramsSet() {
 	let hMin = Math.min(...dataset.map(v=>v.h.min))
 	let hMax = Math.max(...dataset.map(v=>v.h.max))
 	//if(selectedDate!=0) console.log(zones[0].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600])
-
+	let selectedDateStart = (~~((selectedDate+3*3600)/86400))*86400-3*3600
   return (
     <div className={classes.wrapper}>
       <div className={classes.diagramsColumn}>
@@ -361,14 +361,15 @@ export default function TimeDiagramsSet() {
       </div>
 			{selectedDate!=0 && 
       <div className={classes.tableColumn}>
-				<TimeTable 
-					data={zones[0].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600].t.data}
+				<TimeTable
+					title={new Date(selectedDate*1000).toLocaleDateString() + ' Z2 H'}
+					data={zones[0].array[selectedDateStart].h?zones[0].array[selectedDateStart].h.data:[]}
 					time={selectedDate}
 				/>
 				<TimeTable 
-					data={zones[1].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600].t.data}
+					title={new Date(selectedDate*1000).toLocaleDateString() + ' Z3 H'}
+					data={zones[1].array[selectedDateStart].h?zones[1].array[selectedDateStart].h.data:[]}
 					time={selectedDate}
-
 				/>
       </div>
 			}

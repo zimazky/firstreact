@@ -13,12 +13,29 @@ export default function Table({header = [], data = [], width=300, height=500, ro
     </div>
   )
 }
+
+export function ScrollBar({onPgDn=()=>{}, onPgUp=()=>{}, children=null}) {
+
+  return (
+  <div>
+    {children}
+    <div className={classes.scrollbarTrack} onClick={onPgDn}>
+        <div className={classes.scrollbarUp} style={{height:thumbShift}} onClick={onPgUp}></div>
+        <div className={classes.scrollbarThumb} style={{height:thumbHeight}} 
+          onMouseDown={onMouseDown} 
+          onClick={(e)=>{e.stopPropagation()}}
+        ></div>
+    </div>
+  </div>
+  )
+}
+
 // headerName
 // data = [{time,value}]
 const colId = {width:35}
 const colTime = {width:60}
 const colValue = {width:30}
-export function TimeTable({title = 'Table', headerName = 'value', data = [], time, height=200}) {
+export function TimeTable({title='Table', headerName = 'value', data = [], time, height=200}) {
   const [row,setRow] = React.useState(data.findIndex(v=>v.time>=time))
   const tableElement = React.useRef(null)
   const refTime = React.useRef(time)
@@ -84,8 +101,8 @@ export function TimeTable({title = 'Table', headerName = 'value', data = [], tim
   return (
     <>
     <div>{title}</div>
-    <div className={classes.wrapper} style={{height}}>
-      <div ref={tableElement} className={classes.table}>
+    <div ref={tableElement} className={classes.wrapper} style={{height}}>
+      <div className={classes.table}>
       <div className={classes.row}>
         <span style={colId}>#</span><span style={colTime}>time</span><span style={colValue}>{headerName}</span>
       </div> { data.slice(row,row+rows).map((v,i)=>{
