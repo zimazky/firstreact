@@ -1,3 +1,4 @@
+//import { useCallback } from 'react';
 import { IrregularFloatDataset } from '../irregularDS.js';
 import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
 import {TimeTable} from './Table.jsx'
@@ -292,7 +293,7 @@ export class ArduinoZone extends TimeSlots {
 
 let zones = []
 let ti = {}
-ti.end = new Date('2021.08.07')/1000
+ti.end = new Date('2021.12.11 00:00:00')/1000
 ti.begin = ti.end-2*24*3600
 const width = 300
 const barw = 1
@@ -321,25 +322,25 @@ export default function TimeDiagramsSet() {
     setDataset(newDataset)
   },[timeInterval])
 
-  function onShift(d) {
+  const onShift = React.useCallback( (d) => {
     setTimeInterval((prevTimeInterval)=>{
       let interval = prevTimeInterval.end-prevTimeInterval.begin
       return { begin: prevTimeInterval.begin-interval*d, end: prevTimeInterval.end-interval*d }
     })
-  }
+  })
 
-  function onZoom(z,k) {
+  const onZoom = React.useCallback( (z,k) => {
     setTimeInterval((prevTimeInterval)=>{
       let interval = prevTimeInterval.end-prevTimeInterval.begin
       if ( z*interval < 300 ) return prevTimeInterval
       let timeOffset = prevTimeInterval.begin+k*interval
       return { begin: timeOffset-z*(timeOffset-prevTimeInterval.begin), end: timeOffset+z*(prevTimeInterval.end-timeOffset)}
     })
-  }
+  })
 
-	function onSelectDate(date) {
+	const onSelectDate = React.useCallback( (date) => {
 		setSelectedDate(date)
-	}
+	})
 
 	let tMin = Math.min(...dataset.map(v=>v.t.min))
 	let tMax = Math.max(...dataset.map(v=>v.t.max))

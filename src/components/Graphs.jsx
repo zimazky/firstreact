@@ -334,7 +334,30 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
     isDragging = true
     clientX0 = e.offsetX
   }
-  function onMouseMove(e) {
+
+  // Функция-обертка для пропусков частых вызовов, ограничение задается переменной ms в милисекундах
+  function throttle(fn, ms = 200) {
+    let isThrottled = false, lastArgs, lastThis
+    function wrapper() {
+      if(isThrottled) {
+        lastArgs = arguments
+        lastThis = this
+        return
+      }
+      fn.apply(this,arguments)
+      isThrottled = true
+      setTimeout(()=>{
+        isThrottled=false
+        if(lastArgs) {
+          wrapper.apply(lastThis,lastArgs)
+          lastArgs = lastThis = null
+        }
+      },ms)
+    }
+    return wrapper
+  }
+
+  const onMouseMove = React.useCallback( throttle( (e) => {
     if (isDragging) {
       let d = (e.offsetX-clientX0)/width
       clientX0 = e.offsetX
@@ -342,7 +365,8 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
       //updateTimeInterval({type:'shift',value:d})
     }
     setCursorPosition({x:e.offsetX,y:e.offsetY})
-  }
+  }, 30) )
+
   function onMouseUp(e) {
     e.preventDefault()
     isDragging = false
