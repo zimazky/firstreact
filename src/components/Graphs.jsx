@@ -329,7 +329,8 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   // Обработчики мыши
   let isDragging = false
   let clientX0 = 0.
-  function onMouseDown(e) {
+  
+  function onPointerDown(e) {
     e.preventDefault()
     isDragging = true
     clientX0 = e.offsetX
@@ -357,7 +358,7 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
     return wrapper
   }
 
-  const onMouseMove = React.useCallback( throttle( (e) => {
+  const onPointerMove = React.useCallback( throttle( (e) => {
     if (isDragging) {
       let d = (e.offsetX-clientX0)/width
       clientX0 = e.offsetX
@@ -367,7 +368,7 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
     setCursorPosition({x:e.offsetX,y:e.offsetY})
   }, 30) )
 
-  function onMouseUp(e) {
+  function onPointerUp(e) {
     e.preventDefault()
     isDragging = false
   }
@@ -378,7 +379,7 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
     onZoom(z,k)
     //updateTimeInterval({type:'zoom',value:z,offset:k})
   }
-  function onMouseOut(e) {
+  function onPointerOut(e) {
     setCursorPosition({x:0,y:0})
   }
   /////////////////////////////////////////////////////////////////////////////
@@ -386,17 +387,17 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   React.useEffect(() => {
     console.log('AddEventListener Mouse')
     diagramElement.current.addEventListener('wheel', onWheel)
-    diagramElement.current.addEventListener('mousedown', onMouseDown)
-    diagramElement.current.addEventListener('mousemove', onMouseMove)
-    diagramElement.current.addEventListener('mouseup', onMouseUp)
-    diagramElement.current.addEventListener('mouseout', onMouseOut)
+    diagramElement.current.addEventListener('pointerdown', onPointerDown)
+    diagramElement.current.addEventListener('pointermove', onPointerMove)
+    diagramElement.current.addEventListener('pointerup', onPointerUp)
+    diagramElement.current.addEventListener('pointerout', onPointerOut)
     return ()=>{
       console.log('RemoveEventListener Mouse')
       diagramElement.current.removeEventListener('wheel', onWheel)
-      diagramElement.current.removeEventListener('mousedown', onMouseDown)
-      diagramElement.current.removeEventListener('mousemove', onMouseMove)
-      diagramElement.current.removeEventListener('mouseup', onMouseUp)
-      diagramElement.current.removeEventListener('mouseout', onMouseOut)
+      diagramElement.current.removeEventListener('pointerdown', onPointerDown)
+      diagramElement.current.removeEventListener('pointermove', onPointerMove)
+      diagramElement.current.removeEventListener('pointerup', onPointerUp)
+      diagramElement.current.removeEventListener('pointerout', onPointerOut)
       }
   }, [])
 
