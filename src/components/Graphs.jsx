@@ -331,6 +331,7 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   let clientX0 = 0.
   
   function onPointerDown(e) {
+    e.stopPropagation()
     e.preventDefault()
     isDragging = true
     clientX0 = e.offsetX
@@ -359,6 +360,8 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   }
 
   const onPointerMove = React.useCallback( throttle( (e) => {
+    e.stopPropagation()
+    e.preventDefault()
     if (isDragging) {
       let d = (e.offsetX-clientX0)/width
       clientX0 = e.offsetX
@@ -369,6 +372,7 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   }, 30) )
 
   function onPointerUp(e) {
+    e.stopPropagation()
     e.preventDefault()
     isDragging = false
   }
