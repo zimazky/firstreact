@@ -379,8 +379,8 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
       setCursorPosition({x:e.offsetX,y:e.offsetY})
       return
     }
-    if(pointerId1 === e.pointerId && clientX1 !== clientX0) {
-      let z = (e.offsetX-clientX0)/(clientX1-clientX0)
+    if(pointerId1 === e.pointerId && e.offsetX !== clientX0) {
+      let z = (clientX1-clientX0)/(e.offsetX-clientX0)
       let k = (clientX0)/width
       onZoom(z,k)
     }
