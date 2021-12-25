@@ -329,13 +329,19 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   // Обработчики мыши
   let isDragging = false
   let clientX0 = 0.
+  let clientX1 = 0.
+  let pointerId1 = null
   
   function onPointerDown(e) {
     e.preventDefault()
     if(e.isPrimary) {
       isDragging = true
       clientX0 = e.offsetX
+      return
     }
+    if(pointerId1 !== null) return
+    pointerId1 = e.pointerId
+    clientX1 = e.offsetX
   }
 
   // Функция-обертка для пропусков частых вызовов, ограничение задается переменной ms в милисекундах
@@ -362,20 +368,36 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
 
   const onPointerMove = React.useCallback( throttle( (e) => {
     e.preventDefault()
-    if(!e.isPrimary) return
-    if(isDragging) {
+    if(!isDragging) {
+      setCursorPosition({x:e.offsetX,y:e.offsetY})
+      return
+    }
+    if(e.isPrimary) {
       let d = (e.offsetX-clientX0)/width
       clientX0 = e.offsetX
       onShift(d)
-      //updateTimeInterval({type:'shift',value:d})
+      setCursorPosition({x:e.offsetX,y:e.offsetY})
+      return
     }
-    setCursorPosition({x:e.offsetX,y:e.offsetY})
+    if(pointerId1 === e.pointerId && clientX1 !== clientX0) {
+      let z = (e.offsetX-clientX0)/(clientX1-clientX0)
+      let k = (clientX0)/width
+      onZoom(z,k)
+    }
   }, 30) )
 
   function onPointerUp(e) {
     e.preventDefault()
-    if(e.isPrimary) isDragging = false
+    if(e.isPrimary) {
+      isDragging = false
+      return
+    }
+    if(pointerId1 === e.pointerId) {
+      pointerId1 = null
+      clientX1 = 0.
+    }
   }
+
   function onWheel(e) {
     e.preventDefault()
     let z = e.wheelDelta>0 ? 0.9 : 1.1111111111111112
