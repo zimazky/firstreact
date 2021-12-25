@@ -426,7 +426,7 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
         )})
       }
       </div>
-      <div className={styles.yLabels} style={{width:300, height:200}}> {
+      <div className={styles.yLabels} style={{width, height}}> {
         getYTickLabels(min,max,height).map((l,i)=>{ 
           return (
             <div className={styles.yTickLabels} key={i} style={{height: l.height}}>{l.label}</div>

@@ -295,7 +295,7 @@ let zones = []
 let ti = {}
 ti.end = new Date('2021.12.25 00:00:00')/1000
 ti.begin = ti.end-2*24*3600
-const width = 300
+const width = 400
 const barw = 1
 
 export default function TimeDiagramsSet() {
@@ -351,11 +351,11 @@ export default function TimeDiagramsSet() {
   return (
     <div className={classes.wrapper}>
       <div className={classes.diagramsColumn}>
-        <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} onSelectDate={onSelectDate} min={tMin} max={tMax}>
+        <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} onSelectDate={onSelectDate} min={tMin} max={tMax} width={width}>
           {dataset[0] && <Line data={dataset[0].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#ffa23c'/>}
 					{dataset[1] && <Line data={dataset[1].t.zdata} height={200} min={tMin} max={tMax} barw={barw} color='#88a23c'/>}
         </TimeDiagram>
-        <TimeDiagram title='Humidity, %' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} onSelectDate={onSelectDate} min={hMin} max={hMax}>
+        <TimeDiagram title='Humidity, %' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} onSelectDate={onSelectDate} min={hMin} max={hMax} width={width}>
           {dataset[0] && <Line data={dataset[0].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#bbb'/>}
           {dataset[1] && <Line data={dataset[1].h.zdata} height={200} min={hMin} max={hMax} barw={barw} color='#88bbbb'/>}
         </TimeDiagram>
