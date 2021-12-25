@@ -382,6 +382,7 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
     if(pointerId1 === e.pointerId && e.offsetX !== clientX0) {
       let z = (clientX1-clientX0)/(e.offsetX-clientX0)
       let k = (clientX0)/width
+      clientX1 = e.offsetX
       onZoom(z,k)
     }
   }, 30) )
