@@ -1,4 +1,4 @@
-import { IrregularFloatDataset } from '../irregularDS.js';
+import { IrregularFloatDataset } from '../utils/irregularDS.js';
 import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
 import {TimeTable} from './Table.jsx'
 import styles from './TimeDiagramsSet.module.css'
@@ -311,7 +311,7 @@ export default function TimeDiagramsSet() {
 
     zones.forEach((v)=>{v.onload = ()=>{
       setTimeInterval((prevTimeInterval)=>{
-        return { begin: prevTimeInterval.begin, end: prevTimeInterval.end }
+        return {...prevTimeInterval}
       })
 		}})
   },[])	

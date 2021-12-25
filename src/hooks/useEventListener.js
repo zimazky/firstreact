@@ -13,4 +13,4 @@ export default function useEventListener(eventName, handler, target = window, op
       target.removeEventListener(eventName, listener, options)
     }
   }, [eventName, target])
-};
+}

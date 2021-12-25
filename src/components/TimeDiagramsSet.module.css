@@ -1,8 +1,7 @@
-/*
 .wrapper {
-
+  display: inline-block;
 }
-*/
+
 .diagramsColumn {
   display: inline-block;
 }

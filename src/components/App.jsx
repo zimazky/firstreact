@@ -1,3 +1,4 @@
+import Header from './Header.jsx';
 import TemperatureControl from './TemperatureControl.jsx'
 import TimeDiagramsSet from './TimeDiagramsSet.jsx'
 
@@ -11,13 +12,14 @@ export default function () {
   
 
   return (
-    <>
-      <TimeDiagramsSet>
-
-      </TimeDiagramsSet>
-      <div>
-        {state.map((zone, index) => <TemperatureControl key={index} zone={zone} update={(modifyedZone)=>{setState(state.map((rec)=>{console.log(modifyedZone); return (rec.id==modifyedZone.id)?modifyedZone:rec}))}}/>)}
+    <div style={{display: 'inline-block', maxWidth: 900}}>
+      <Header/>
+      <div style={{textAlign: 'left', direction: 'rtl'}}>
+        <div style={{display: 'inline-block',	verticalAlign: 'top',	direction: 'ltr', margin: 4}}>
+          {state.map((zone, index) => <TemperatureControl key={index} zone={zone} update={(modifyedZone)=>{setState(state.map((rec)=>{console.log(modifyedZone); return (rec.id==modifyedZone.id)?modifyedZone:rec}))}}/>)}
+        </div>
+        <TimeDiagramsSet></TimeDiagramsSet>
       </div>
-    </>
+    </div>
   )
 }
