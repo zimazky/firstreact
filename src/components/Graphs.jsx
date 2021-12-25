@@ -1,3 +1,4 @@
+import usePointerZoom from '../hooks/usePointerZoom'
 import styles from './Graphs.module.css'
 
 
@@ -317,117 +318,14 @@ function getYTickLabels(min, max, height, minTick=20) {
   return yLabels
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // Компонент временной диаграмы
 export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, max=1, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}, onSelectDate=()=>{} }) {
 
-//  const {timeInterval,updateTimeInterval} = useTimeInterval()
   const [cursorPosition, setCursorPosition] = React.useState({x:0,y:0})
   const diagramElement = React.useRef(null);
-  /////////////////////////////////////////////////////////////////////////////
-  // Обработчики мыши
-  let isDragging = false
-  let clientX0 = 0.
-  let clientX1 = 0.
-  let pointerId1 = null
+  usePointerZoom(diagramElement.current, width, onShift, onZoom, (x,y)=>{setCursorPosition({x,y})})
   
-  function onPointerDown(e) {
-    e.preventDefault()
-    if(e.isPrimary) {
-      isDragging = true
-      clientX0 = e.offsetX
-      return
-    }
-    if(pointerId1 !== null) return
-    pointerId1 = e.pointerId
-    clientX1 = e.offsetX
-  }
-
-  // Функция-обертка для пропусков частых вызовов, ограничение задается переменной ms в милисекундах
-  function throttle(fn, ms = 200) {
-    let isThrottled = false, lastArgs, lastThis
-    function wrapper() {
-      if(isThrottled) {
-        lastArgs = arguments
-        lastThis = this
-        return
-      }
-      fn.apply(this,arguments)
-      isThrottled = true
-      setTimeout(()=>{
-        isThrottled=false
-        if(lastArgs) {
-          wrapper.apply(lastThis,lastArgs)
-          lastArgs = lastThis = null
-        }
-      },ms)
-    }
-    return wrapper
-  }
-
-  const onPointerMove = React.useCallback( throttle( (e) => {
-    e.preventDefault()
-    if(!isDragging) {
-      setCursorPosition({x:e.offsetX,y:e.offsetY})
-      return
-    }
-    if(e.isPrimary) {
-      let d = (e.offsetX-clientX0)/width
-      clientX0 = e.offsetX
-      onShift(d)
-      setCursorPosition({x:e.offsetX,y:e.offsetY})
-      return
-    }
-    if(pointerId1 === e.pointerId && e.offsetX !== clientX0) {
-      let z = (clientX1-clientX0)/(e.offsetX-clientX0)
-      let k = (clientX0)/width
-      clientX1 = e.offsetX
-      onZoom(z,k)
-    }
-  }, 30) )
-
-  function onPointerUp(e) {
-    e.preventDefault()
-    if(e.isPrimary) {
-      isDragging = false
-      return
-    }
-    if(pointerId1 === e.pointerId) {
-      pointerId1 = null
-      clientX1 = 0.
-    }
-  }
-
-  function onWheel(e) {
-    e.preventDefault()
-    let z = e.wheelDelta>0 ? 0.9 : 1.1111111111111112
-    let k = (e.offsetX)/width
-    onZoom(z,k)
-    //updateTimeInterval({type:'zoom',value:z,offset:k})
-  }
-  function onPointerOut(e) {
-    setCursorPosition({x:0,y:0})
-  }
-  /////////////////////////////////////////////////////////////////////////////
-  // Регистрация обработчиков
-  React.useEffect(() => {
-    console.log('AddEventListener Mouse')
-    diagramElement.current.addEventListener('wheel', onWheel)
-    diagramElement.current.addEventListener('pointerdown', onPointerDown)
-    diagramElement.current.addEventListener('pointermove', onPointerMove)
-    diagramElement.current.addEventListener('pointerup', onPointerUp)
-    diagramElement.current.addEventListener('pointerout', onPointerOut)
-    return ()=>{
-      console.log('RemoveEventListener Mouse')
-      diagramElement.current.removeEventListener('wheel', onWheel)
-      diagramElement.current.removeEventListener('pointerdown', onPointerDown)
-      diagramElement.current.removeEventListener('pointermove', onPointerMove)
-      diagramElement.current.removeEventListener('pointerup', onPointerUp)
-      diagramElement.current.removeEventListener('pointerout', onPointerOut)
-      }
-  }, [])
-
   let yScale = (max-min)/height
   return (
     <>

@@ -1,8 +1,7 @@
-//import { useCallback } from 'react';
 import { IrregularFloatDataset } from '../irregularDS.js';
 import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
 import {TimeTable} from './Table.jsx'
-import classes from './TimeDiagramsSet.module.css'
+import styles from './TimeDiagramsSet.module.css'
 //import { TimeIntervalProvider } from './TimeIntervalContext.jsx'
 
 
@@ -350,8 +349,8 @@ export default function TimeDiagramsSet() {
 	//if(selectedDate!=0) console.log(zones[0].array[(~~((selectedDate+3*3600)/86400))*86400-3*3600])
 	let selectedDateStart = (~~((selectedDate+3*3600)/86400))*86400-3*3600
   return (
-    <div className={classes.wrapper}>
-      <div className={classes.diagramsColumn}>
+    <div className={styles.wrapper}>
+      <div className={styles.diagramsColumn}>
         <TimeDiagram title='Temperature, °C' timeInterval={timeInterval} onShift={onShift} onZoom={onZoom} onSelectDate={onSelectDate} min={tMin} max={tMax} width={width} height={height}>
           {dataset[0] && <Line data={dataset[0].t.zdata} height={height} min={tMin} max={tMax} barw={barw} color='#ffa23c'/>}
 					{dataset[1] && <Line data={dataset[1].t.zdata} height={height} min={tMin} max={tMax} barw={barw} color='#88a23c'/>}
@@ -362,7 +361,7 @@ export default function TimeDiagramsSet() {
         </TimeDiagram>
       </div>
 			{selectedDate!=0 && 
-      <div className={classes.tableColumn}>
+      <div className={styles.tableColumn}>
 				<TimeTable
 					title={new Date(selectedDate*1000).toLocaleDateString() + ' Z2 H'}
 					data={zones[0].array[selectedDateStart].h?zones[0].array[selectedDateStart].h.data:[]}
