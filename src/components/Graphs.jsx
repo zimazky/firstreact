@@ -331,10 +331,11 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   let clientX0 = 0.
   
   function onPointerDown(e) {
-    e.stopPropagation()
     e.preventDefault()
-    isDragging = true
-    clientX0 = e.offsetX
+    if(e.isPrimary) {
+      isDragging = true
+      clientX0 = e.offsetX
+    }
   }
 
   // Функция-обертка для пропусков частых вызовов, ограничение задается переменной ms в милисекундах
@@ -360,9 +361,9 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   }
 
   const onPointerMove = React.useCallback( throttle( (e) => {
-    e.stopPropagation()
     e.preventDefault()
-    if (isDragging) {
+    if(!e.isPrimary) return
+    if(isDragging) {
       let d = (e.offsetX-clientX0)/width
       clientX0 = e.offsetX
       onShift(d)
@@ -372,9 +373,8 @@ export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, 
   }, 30) )
 
   function onPointerUp(e) {
-    e.stopPropagation()
     e.preventDefault()
-    isDragging = false
+    if(e.isPrimary) isDragging = false
   }
   function onWheel(e) {
     e.preventDefault()

@@ -293,7 +293,7 @@ export class ArduinoZone extends TimeSlots {
 
 let zones = []
 let ti = {}
-ti.end = new Date('2021.12.11 00:00:00')/1000
+ti.end = new Date('2021.12.25 00:00:00')/1000
 ti.begin = ti.end-2*24*3600
 const width = 300
 const barw = 1
