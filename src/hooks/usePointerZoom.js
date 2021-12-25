@@ -36,9 +36,11 @@ export default function usePointerZoom(targetElement, width, onShift=()=>{}, onZ
       onMove(e.offsetX,e.offsetY)
       return
     }
-    if(pointerId1 === e.pointerId && e.offsetX !== clientX0) {
-      let z = (clientX1-clientX0)/(e.offsetX-clientX0)
-      if(z<0.1) return
+    if(pointerId1 === e.pointerId) {
+      let z = (e.offsetX-clientX0)
+      if(Math.abs(z)<10) return
+      z = (clientX1-clientX0)/z
+      if(z<0) return
       let k = (clientX0)/width
       clientX1 = e.offsetX
       onZoom(z,k)
