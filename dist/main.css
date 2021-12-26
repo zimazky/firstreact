@@ -3,6 +3,7 @@
 	height: 48px;
 	vertical-align: top;
   text-align: left;
+  margin: 4px;
 }
 .left_cdef396 {
 	display: inline-block;
@@ -265,7 +266,6 @@
 }
 .wrapper_d20fbe7 {
   display: inline-block;
-  direction: ltr;
 }
 
 .diagramsColumn_ebe3634 {
@@ -286,6 +286,31 @@ th {
 }
 .humidityColumn_bf089a3 {
   width: 50px;
+}
+.wrapper_d808929 {
+  display: inline-block;
+  max-width: 900px;
+}
+
+.main_ef0bc9e {
+  text-align: center;
+  direction: rtl;
+}
+
+.controlsbox_d8af8a5 {
+  display: inline-block;
+  vertical-align: top;
+  text-align: left;
+  direction: ltr;
+  margin: 4px;
+}
+
+.diagramsbox_e0be825 {
+  display: inline-block;
+  vertical-align: top;
+  text-align: left;
+  direction: ltr;
+  margin: 4px;
 }
 * {
 	padding: 0;

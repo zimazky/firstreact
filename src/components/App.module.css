@@ -1,0 +1,25 @@
+.wrapper {
+  display: inline-block;
+  max-width: 900px;
+}
+
+.main {
+  text-align: center;
+  direction: rtl;
+}
+
+.controlsbox {
+  display: inline-block;
+  vertical-align: top;
+  text-align: left;
+  direction: ltr;
+  margin: 4px;
+}
+
+.diagramsbox {
+  display: inline-block;
+  vertical-align: top;
+  text-align: left;
+  direction: ltr;
+  margin: 4px;
+}
