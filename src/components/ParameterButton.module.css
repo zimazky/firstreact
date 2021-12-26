@@ -1,3 +1,26 @@
+.disabled {
+	display:inline-block;
+	white-space: nowrap; 
+	padding: 3px 6px; 
+	margin: 0; 
+}
+
+.enabled {
+	display:inline-block;
+	border: 1px solid; 
+	border-radius: 3px; 
+	white-space: nowrap; 
+	padding: 3px 6px; 
+	margin: 0; 
+	cursor: pointer;
+}
+
+.enabled:hover { 
+	background-color: #fff; 
+	text-shadow: none; 
+	color: #000;
+}
+
 .name{
 	padding: 3px 0 0 0;
 }

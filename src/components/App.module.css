@@ -1,6 +1,6 @@
 .wrapper {
   display: inline-block;
-  max-width: 900px;
+  max-width: 720px;
 }
 
 .main {
@@ -22,4 +22,12 @@
   text-align: left;
   direction: ltr;
   margin: 4px;
+}
+
+.info {
+  display: inline-block;
+  width: 350px;
+  direction: ltr;
+  text-align: left;
+  word-wrap: break-word;
 }

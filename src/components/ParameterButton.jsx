@@ -9,12 +9,12 @@ export default function({parameterName, displayedValue = 0., controlledValue = 0
 
   return (
     disabled ?
-    <div>
+    <span className={styles.disabled}>
       <div className={styles.name}>{parameterName}</div>
       <div className={styles.value}>{displayedValue}</div>
-    </div>
+    </span>
     :
-    <div className='button' onClick={()=>{openModal(!isModalOpen)}}>
+    <span className={styles.enabled} onClick={()=>{openModal(!isModalOpen)}}>
       <div className={styles.name}>{parameterName}</div>
       <div className={styles.value}>{displayedValue}</div>
       <Modal isOpen={isModalOpen} title={'Set target temperature for Zone'} onSubmit={()=>{update(state);openModal(false)}} onCancel={()=>{openModal(false)}}>
@@ -22,6 +22,6 @@ export default function({parameterName, displayedValue = 0., controlledValue = 0
         <span className={styles.modal_parameter}>{state.toFixed(1)}</span>
         <span className={styles.modal_button} onClick={()=>{setState(state+0.1)}}>+</span>
       </Modal>
-    </div>
+    </span>
   )
 }

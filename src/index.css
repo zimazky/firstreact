@@ -13,23 +13,3 @@ body {
 	text-align: center;
 	user-select: none;
 }
-
-.button { 
-	display:inline-block;
-	border: 1px solid; 
-	border-radius: 3px; 
-	white-space: nowrap; 
-	padding: 3px 6px; 
-	margin: 0; 
-	cursor: pointer;
-}
-.button:active, .button.active, .button.active:hover { 
-	background-color: #F49B25; 
-	text-shadow: none; 
-	color: #fff; 
-}
-.button:hover { 
-	background-color: #fff; 
-	text-shadow: none; 
-	color: #000;
-}

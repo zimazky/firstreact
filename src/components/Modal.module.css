@@ -7,6 +7,7 @@
   bottom: 0;
   cursor: default;
   user-select: none;
+  z-index: 1;
 }
 
 .modalWindow {

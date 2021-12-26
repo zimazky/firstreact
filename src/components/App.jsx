@@ -11,16 +11,17 @@ export default function () {
     {id: '3', temperature: 13.5, targetTemperature: 0., targetTemperatureDelta: 0., humidity: 98.2}
   ];
   const [state,setState] = React.useState(zones)
-  const [s,setS] = React.useState(zones)
+  
+  const [s,setS] = React.useState({version:'offline', unixtime: 0})
   React.useEffect( ()=>{
     const arduinoapi = new ArduinoController('http://192.168.2.2')
     arduinoapi.getInfo().then(response=>response.text()).then(text=>{
       setS(ArduinoController.parseInfo(text))
-    })
+    }).catch(()=>{})
     const i = setInterval(()=>{
       arduinoapi.getInfo().then(response=>response.text()).then(text=>{
         setS(ArduinoController.parseInfo(text))
-      })
+      }).catch(()=>{})
     },10000)
     return clearInterval(i)
   }, [])
@@ -35,7 +36,7 @@ export default function () {
         <div className={styles.diagramsbox}>
           <TimeDiagramsSet></TimeDiagramsSet>
         </div>
-        <div>{JSON.stringify(s)}</div>
+        <div className={styles.info}>{JSON.stringify(s)}</div>
       </div>
     </div>
   )

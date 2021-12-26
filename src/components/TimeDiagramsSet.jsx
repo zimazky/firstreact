@@ -294,7 +294,7 @@ let zones = []
 let ti = {}
 ti.end = new Date('2021.12.25 00:00:00')/1000
 ti.begin = ti.end-2*24*3600
-const width = 400
+const width = 350
 const height = 250
 const barw = 1
 
