@@ -131,7 +131,7 @@
 	display:inline-block;
 	white-space: nowrap; 
 	padding: 3px 6px; 
-	margin: 0; 
+	margin: 1; 
 }
 
 .enabled__6ea955 {
@@ -154,7 +154,11 @@
 	padding: 3px 0 0 0;
 }
 .value_beb9422{
-	font-size: 25px
+	font-size: 25px;
+}
+.not_synced_value__eb6764 {
+	font-size: 25px;
+	color: dimgray;
 }
 .modal_parameter__7b683e, .modal_button_fde7e68 {
 	font-size: 28px;

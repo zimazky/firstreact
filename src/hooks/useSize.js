@@ -1,41 +1,20 @@
-import useRafState from '../useRafState';
-import type { BasicTarget } from '../utils/domTarget';
-import { getTargetElement } from '../utils/domTarget';
-import useIsomorphicLayoutEffectWithTarget from '../utils/useIsomorphicLayoutEffectWithTarget';
+//import useRafState from '../useRafState';
 
-//type Size = { width: number; height: number };
+export default function useSize(target = null) {
+  const [state, setState] = React.useState({}) //useRafState()
 
-function useSize(target) {
-  const [state, setState] = useRafState()
-
-  useLayoutEffectWithTarget(
-    () => {
-      const el = getTargetElement(target);
-
-      if (!el) {
-        return;
-      }
-
-      const resizeObserver = new ResizeObserver((entries) => {
-        entries.forEach((entry) => {
-          const { clientWidth, clientHeight } = entry.target;
-          setState({
-            width: clientWidth,
-            height: clientHeight,
-          });
-        });
-      });
-
-      resizeObserver.observe(el);
-      return () => {
-        resizeObserver.disconnect();
-      };
-    },
-    [],
-    target,
-  );
-
-  return state;
+  React.useLayoutEffect(() => {
+    if(!target) return
+    const resizeObserver = new ResizeObserver( (entries) => {
+      entries.forEach( (entry) => {
+        const { clientWidth, clientHeight } = entry.target;
+        setState({ width: clientWidth, height: clientHeight })
+        console.log('resize', clientWidth)
+      })
+    })
+    resizeObserver.observe(target)
+    console.log('Add resizeObserver', target)
+    return () => { resizeObserver.disconnect() }
+  }, [target])
+  return state
 }
-
-export default useSize;

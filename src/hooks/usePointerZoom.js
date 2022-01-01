@@ -1,5 +1,6 @@
 import useEventListener from '../hooks/useEventListener'
 import throttle from '../utils/throttle'
+import useSize from './useSize'
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -7,7 +8,10 @@ import throttle from '../utils/throttle'
 // переменной targetElement, ссылающейся на DOM элемент
 // Работает на всех типах указывающих устройств, обрабатываются pointer events
 export default function usePointerZoom(targetElement, width, onShift=()=>{}, onZoom=()=>{}, onMove=()=>{}) {
-  const stateRef = React.useRef({isDragging:false,clientX0:0,clientX1:0,pointerId1:null}).current
+  const stateRef = React.useRef({isDragging:false, clientX0:0, clientX1:0, pointerId1:null}).current
+  //const size = useSize(targetElement)
+  //const width = size.width
+  //console.log('pointerZoom', size)
 
   function onPointerDown(e) {
     e.preventDefault()

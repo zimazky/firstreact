@@ -4,39 +4,88 @@ import TimeDiagramsSet from './TimeDiagramsSet.jsx'
 import styles from './App.module.css'
 import ArduinoController from '../arduinoapi.js/arduinoapi.js';
 
+const zones = [
+  {id: '1', temperature: 14.1, targetTemperature: 23.5, targetTemperatureDelta: 0.1, humidity: 54.3},
+  {id: '2', temperature: 5.1, targetTemperature: 5., targetTemperatureDelta: 0.1, humidity: 85.1},
+]
+const arduinoapi = new ArduinoController('http://192.168.2.2')
+
 export default function () {
-  let zones = [
-    {id: '1', temperature: 21.5, targetTemperature: 25., targetTemperatureDelta: 0.2, humidity: 56.},
-    {id: '2', temperature: 22.4, targetTemperature: 23.4, targetTemperatureDelta: 0.1, humidity: 55.6},
-    {id: '3', temperature: 13.5, targetTemperature: 0., targetTemperatureDelta: 0., humidity: 98.2}
-  ];
-  const [state,setState] = React.useState(zones)
-  
-  const [s,setS] = React.useState({version:'offline', unixtime: 0})
+  const [state,setState] = React.useState({version:'offline', unixtime: 0, zones})
+
   React.useEffect( ()=>{
-    const arduinoapi = new ArduinoController('http://192.168.2.2')
-    arduinoapi.getInfo().then(response=>response.text()).then(text=>{
-      setS(ArduinoController.parseInfo(text))
-    }).catch(()=>{})
+    arduinoapi.getInfo()
+      .then(response=>response.text())
+      .then(text=>{ setState(ArduinoController.parseInfo(text)) })
+      .catch(() => console.log('ArduinoController not available'))
+
     const i = setInterval(()=>{
-      arduinoapi.getInfo().then(response=>response.text()).then(text=>{
-        setS(ArduinoController.parseInfo(text))
-      }).catch(()=>{})
-    },10000)
-    return clearInterval(i)
+      arduinoapi.getInfo()
+        .then(response=>response.text())
+        .then(text=>setState(ArduinoController.parseInfo(text)))
+        .catch(()=>{
+          console.log('ArduinoController not available')
+          setState( s => ({...s, version: 'offline'}) )
+        })
+
+    }, 10000)
+    return () => clearInterval(i)
   }, [])
+
+  const onSetTemperature = React.useCallback((zone) => {
+    arduinoapi.setTemperature(zone.id, zone.targetTemperature)
+    .then(()=>{
+      console.log('ArduinoController set temperature')
+      setState( s => {
+        const zones = s.zones.map( rec => rec.id==zone.id ? zone : rec )
+        return {...s, zones}
+      })
+    })
+    .catch(() => {
+      console.log('ArduinoController not available')
+    })
+  })
+
+  const onSetPowerControl = React.useCallback((zone) => {
+    if(state.zones[zone].onControl) {
+      arduinoapi.powerOff(zone)
+        .then(()=>{
+          console.log('powerOff',zone)
+          setState(s=>{
+            const zones = s.zones
+            zones[zone].onControl = 0
+            return {...s, zones}
+          })
+        })
+        .catch(()=>console.log('Fail powerOff',zone))
+      return
+    }
+    arduinoapi.powerOn(zone)
+      .then(()=>{
+        console.log('powerOn',zone)
+        setState(s=>{
+          const zones = s.zones
+          zones[zone].onControl = 1
+          return {...s, zones}
+        })
+      })
+      .catch(()=>console.log('Fail powerOn',zone))
+  })
 
   return (
     <div className={styles.wrapper}>
-      <Header firmware={s.version} controllerDateTime={new Date(s.unixtime*1000).toLocaleTimeString()}/>
+      <Header firmware={state.version} controllerDateTime={new Date(state.unixtime*1000).toLocaleTimeString()}/>
       <div className={styles.main}>
         <div className={styles.controlsbox}>
-          {state.map((zone, index) => <TemperatureControl key={index} zone={zone} update={(modifyedZone)=>{setState(state.map((rec)=>{console.log(modifyedZone); return (rec.id==modifyedZone.id)?modifyedZone:rec}))}}/>)}
+          {state.zones.map((zone, index) => <TemperatureControl key={index} zone={zone} 
+          setTemperature={onSetTemperature}
+          setPowerControl={onSetPowerControl}
+          />)}
         </div>
         <div className={styles.diagramsbox}>
           <TimeDiagramsSet></TimeDiagramsSet>
         </div>
-        <div className={styles.info}>{JSON.stringify(s)}</div>
+        <div className={styles.info}>{JSON.stringify(state)}</div>
       </div>
     </div>
   )

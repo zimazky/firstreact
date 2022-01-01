@@ -7,6 +7,18 @@ export default class ArduinoController {
     return fetch(this.url+'/?g:i&r='+Math.random())
   }
 
+  setTemperature(zone, temperature) {
+    return fetch(this.url+'/?s'+zone+'t:'+ Math.round(temperature*10)+'&r='+Math.random())
+  }
+
+  powerOn(zone) {
+    return fetch(this.url+'/?s'+zone+'m:1&r='+Math.random())
+  }
+
+  powerOff(zone) {
+    return fetch(this.url+'/?s'+zone+'m:0&r='+Math.random())
+  }
+
   static parseInfo(text) {
 		// 0:version, 1:numofzones,
 		// 2:unixtime, 3:starttime, 4:lastsynctime, 5:lastsyncdelta, 6:lastsyncinterval, 7:tickcounter
@@ -14,13 +26,13 @@ export default class ArduinoController {
 		// 15:t2, 16:tc2, 17:h2, 18:m2, 19:p2, 20:dt2, 21:s2,
 		// 22:t3, 23:tc3, 24:h3, 25:m3, 26:p3, 27:dt3, 28:s3,
 		const a = text.split(';')
-		const z = []
     const [version, numofz, unixtime, starttime, lastsynctime, lastsyncdelta, lastsyncinterval, tickcounter, ...zonesinfo] = a
-    function parseZonesInfo(i, a = []) {
-      const [t,tc,h,m,p,dt,s, ...i2] = i
-      a.push({t:+t, tc:+tc, h:+h, m:+m, p:+p, dt:+dt, s:+s})
-      if(i2.length) parseZonesInfo(i2, a)
-      return a
+    function parseZonesInfo(i, a = [], id = 0) {
+      if(!i.length) return a
+      const [t, tc, h, m, p, dt, s, ...i2] = i
+      a.push({id: ++id, temperature: t/10., targetTemperature: tc/10., humidity: h/10., 
+        onControl:+m, powerOn:+p, targetTemperatureDelta: dt/10., sensorState:+s})
+      return parseZonesInfo(i2, a, id)
     }
 		return {version, numofz:+numofz, unixtime:+unixtime, starttime:+starttime, 
       lastsynctime:+lastsynctime, lastsyncdelta:+lastsyncdelta, lastsyncinterval:+lastsyncinterval, 

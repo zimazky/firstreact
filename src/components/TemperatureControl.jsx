@@ -2,13 +2,13 @@ import Button from './Button.jsx';
 import ParameterButton from './ParameterButton.jsx';
 import styles from './TemperatureControl.module.css'
 
-export default function({zone, update}) {
-  console.log(zone)
+export default function({zone, setTemperature, setPowerControl}) {
+  //console.log(zone)
   return (
   <div className={styles.controlbox}>
     <div className={styles.header}><div className={styles.indicator}></div>{'ZONE'+zone.id}</div>
     <div>
-      <Button onClick={()=>{console.log('pwrcontrol_button')}}>PWRCTRL</Button>
+      <Button onClick={()=>{console.log('pwrcontrol_button',zone.id); setPowerControl(zone.id)}}>PWRCTRL</Button>
       <Button disabled>PWR</Button>
       <Button>CONFIG</Button>
     </div>
@@ -18,9 +18,10 @@ export default function({zone, update}) {
     <div>
       <ParameterButton 
         parameterName='temperature'
-        displayedValue={zone.temperature.toFixed(1) + '°(' + zone.targetTemperature.toFixed(1) + '±' + zone.targetTemperatureDelta + ')'}
+        displayedValue={zone.temperature.toFixed(1) + '°'}
         controlledValue={zone.targetTemperature}
-        update={(newTargetTemperature)=>{update({...zone,targetTemperature:newTargetTemperature})}}
+        controlledValue2={zone.targetTemperatureDelta}
+        update={(newTargetTemperature)=>{setTemperature({...zone,targetTemperature:newTargetTemperature})}}
       />
       <ParameterButton 
         parameterName='humidity'
