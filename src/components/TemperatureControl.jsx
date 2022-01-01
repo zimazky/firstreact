@@ -1,3 +1,4 @@
+import ArduinoController from '../arduinoapi.js/arduinoapi.js';
 import Button from './Button.jsx';
 import ParameterButton from './ParameterButton.jsx';
 import styles from './TemperatureControl.module.css'
@@ -5,7 +6,9 @@ import styles from './TemperatureControl.module.css'
 export default function({zone, setTemperature, setPowerControl}) {
   return (
   <div className={styles.controlbox}>
-    <div className={styles.header}><div className={styles.indicator}></div>{'ZONE'+zone.id}</div>
+    <div className={styles.header}><div className={styles.indicator}></div>
+      {'ZONE'+zone.id+' Sensor: '+ArduinoController.sensorState(zone.sensorState)}
+    </div>
     <div>
       <Button active={zone.onControl?true:false} onClick={()=>setPowerControl(zone.id)}>PWRCTRL</Button>
       <Button active={zone.powerOn?true:false} disabled>PWR</Button>

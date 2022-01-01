@@ -53,4 +53,7 @@ export default class ArduinoController {
       lastsynctime:+lastsynctime, lastsyncdelta:+lastsyncdelta, lastsyncinterval:+lastsyncinterval, 
       tickcounter:+tickcounter, zones: parseZonesInfo(zonesinfo)}
 	}
+
+  static states = ['OK','ErrChecksum','ErrTimeout','ErrConnect','ErrAckL','ErrAckH','ErrUnknown']
+  static sensorState = s => ArduinoController.states[-s]
 }	
