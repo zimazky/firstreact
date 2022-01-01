@@ -1,3 +1,4 @@
+import useEventListener from '../hooks/useEventListener'
 import classes from './Table.module.css'
 // header = [{key,name}]
 // data = [{key1:value1,key2:value2,...}]
@@ -85,6 +86,10 @@ export function TimeTable({title='Table', headerName = 'value', data = [], time,
     refDrag.current = {isDragging:false, y:0}
   }
 
+  useEventListener('wheel', onWheel, tableElement.current)
+  useEventListener('mousemove', onMouseMove, tableElement.current)
+  useEventListener('mouseup', onMouseUp, tableElement.current)
+/*
   React.useEffect(()=>{
     console.log('TimeTable AddEventListener Mouse')
     tableElement.current.addEventListener('wheel', onWheel)
@@ -97,7 +102,7 @@ export function TimeTable({title='Table', headerName = 'value', data = [], time,
       document.removeEventListener('mouseup',onMouseUp)
       }
   },[])
-
+*/
   return (
     <>
     <div>{title}</div>

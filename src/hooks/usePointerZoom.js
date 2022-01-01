@@ -1,48 +1,46 @@
 import useEventListener from '../hooks/useEventListener'
 import throttle from '../utils/throttle'
 
-let isDragging = false
-let clientX0 = 0.
-let clientX1 = 0.
-let pointerId1 = null
+
 ///////////////////////////////////////////////////////////////////////////////
 // Хук масштабирования и смещения содержимого компонента, заданного
 // переменной targetElement, ссылающейся на DOM элемент
 // Работает на всех типах указывающих устройств, обрабатываются pointer events
 export default function usePointerZoom(targetElement, width, onShift=()=>{}, onZoom=()=>{}, onMove=()=>{}) {
+  const stateRef = React.useRef({isDragging:false,clientX0:0,clientX1:0,pointerId1:null}).current
 
   function onPointerDown(e) {
     e.preventDefault()
     if(e.isPrimary) {
-      isDragging = true
-      clientX0 = e.offsetX
+      stateRef.isDragging = true
+      stateRef.clientX0 = e.offsetX
       return
     }
-    if(pointerId1 !== null) return
-    pointerId1 = e.pointerId
-    clientX1 = e.offsetX
+    if(stateRef.pointerId1 !== null) return
+    stateRef.pointerId1 = e.pointerId
+    stateRef.clientX1 = e.offsetX
   }
 
   const onPointerMove = throttle( (e) => {
     e.preventDefault()
-    if(!isDragging) {
+    if(!stateRef.isDragging) {
       onMove(e.offsetX,e.offsetY)
       return
     }
     if(e.isPrimary) {
-      let d = (e.offsetX-clientX0)/width
-      clientX0 = e.offsetX
+      let d = (e.offsetX-stateRef.clientX0)/width
+      stateRef.clientX0 = e.offsetX
       onShift(d)
       onMove(e.offsetX,e.offsetY)
       return
     }
-    if(pointerId1 === e.pointerId) {
-      let z = (e.offsetX-clientX0)
+    if(stateRef.pointerId1 === e.pointerId) {
+      let z = (e.offsetX-stateRef.clientX0)
       if(Math.abs(z)<10) return
-      z = (clientX1-clientX0)/z
+      z = (stateRef.clientX1-stateRef.clientX0)/z
       if(z<0) return
-      let k = (clientX0)/width
-      clientX1 = e.offsetX
+      let k = (stateRef.clientX0)/width
+      stateRef.clientX1 = e.offsetX
       onZoom(z,k)
     }
   }, 30)
@@ -50,12 +48,12 @@ export default function usePointerZoom(targetElement, width, onShift=()=>{}, onZ
   function onPointerUp(e) {
     e.preventDefault()
     if(e.isPrimary) {
-      isDragging = false
+      stateRef.isDragging = false
       return
     }
-    if(pointerId1 === e.pointerId) {
-      pointerId1 = null
-      clientX1 = 0.
+    if(stateRef.pointerId1 === e.pointerId) {
+      stateRef.pointerId1 = null
+      stateRef.clientX1 = 0.
     }
   }
 

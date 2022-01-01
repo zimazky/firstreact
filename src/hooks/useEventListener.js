@@ -4,7 +4,7 @@ export default function useEventListener(eventName, handler, target = window, op
   const handlerRef = useLatest(handler)
 
   React.useEffect(() => {
-    if(!target?.addEventListener) return
+    if(!target?.addEventListener) { console.log(target); return}
     console.log('AddEventListener', eventName)
     const listener = e => handlerRef(e)
     target.addEventListener(eventName, listener, options)

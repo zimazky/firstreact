@@ -1,5 +1,6 @@
 import { IrregularFloatDataset } from '../utils/irregularDS.js';
 import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
+import Modal from './Modal.jsx';
 import {TimeTable} from './Table.jsx'
 import styles from './TimeDiagramsSet.module.css'
 //import { TimeIntervalProvider } from './TimeIntervalContext.jsx'
@@ -360,19 +361,14 @@ export default function TimeDiagramsSet() {
           {dataset[1] && <Line data={dataset[1].h.zdata} height={height} min={hMin} max={hMax} barw={barw} color='#88bbbb'/>}
         </TimeDiagram>
       </div>
-			{selectedDate!=0 && 
-      <div className={styles.tableColumn}>
+			{ selectedDate!=0 && 
+			<Modal isOpen={selectedDate!=0} title={'Set target temperature for Zone'} onCancel={()=>{setSelectedDate(0)}}>
 				<TimeTable
 					title={new Date(selectedDate*1000).toLocaleDateString() + ' Z2 H'}
 					data={zones[0].array[selectedDateStart].h?zones[0].array[selectedDateStart].h.data:[]}
 					time={selectedDate}
 				/>
-				<TimeTable 
-					title={new Date(selectedDate*1000).toLocaleDateString() + ' Z3 H'}
-					data={zones[1].array[selectedDateStart].h?zones[1].array[selectedDateStart].h.data:[]}
-					time={selectedDate}
-				/>
-      </div>
+			</Modal>
 			}
     </div>
   )
