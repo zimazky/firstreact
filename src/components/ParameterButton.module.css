@@ -1,8 +1,9 @@
 .disabled {
 	display:inline-block;
-	white-space: nowrap; 
-	padding: 3px 6px; 
-	margin: 1; 
+	white-space: nowrap;
+	padding: 3px 6px;
+	margin: 1px;
+	margin-top: 5px;
 }
 
 .enabled {
@@ -12,6 +13,7 @@
 	white-space: nowrap; 
 	padding: 3px 6px; 
 	margin: 0; 
+	margin-top: 4px;
 	cursor: pointer;
 }
 

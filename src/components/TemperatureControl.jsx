@@ -3,13 +3,12 @@ import ParameterButton from './ParameterButton.jsx';
 import styles from './TemperatureControl.module.css'
 
 export default function({zone, setTemperature, setPowerControl}) {
-  //console.log(zone)
   return (
   <div className={styles.controlbox}>
     <div className={styles.header}><div className={styles.indicator}></div>{'ZONE'+zone.id}</div>
     <div>
-      <Button onClick={()=>{console.log('pwrcontrol_button',zone.id); setPowerControl(zone.id)}}>PWRCTRL</Button>
-      <Button disabled>PWR</Button>
+      <Button active={zone.onControl?true:false} onClick={()=>setPowerControl(zone.id)}>PWRCTRL</Button>
+      <Button active={zone.powerOn?true:false} disabled>PWR</Button>
       <Button>CONFIG</Button>
     </div>
     <div>

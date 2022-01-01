@@ -3,13 +3,28 @@ export default class ArduinoController {
     this.url = url
   }
 
-  getInfo() {
+  getInfo(response = (t)=>{}, reject = (e)=>{}) {
     return fetch(this.url+'/?g:i&r='+Math.random())
+      .then(r=>r.text())
+      .then(text => response(text))
+      .catch(error => {
+        console.log('ArduinoController not available')
+        reject(error)
+      })
   }
 
-  setTemperature(zone, temperature) {
+  setTemperature(zone, temperature, response = ()=>{}, reject = ()=>{}) {
     return fetch(this.url+'/?s'+zone+'t:'+ Math.round(temperature*10)+'&r='+Math.random())
-  }
+    .then(r=>r.text())
+    .then(text => {
+      console.log('ArduinoController set temperature')
+      response(text)
+    })
+    .catch(error => {
+      console.log('ArduinoController not available')
+      reject(error)
+    })
+}
 
   powerOn(zone) {
     return fetch(this.url+'/?s'+zone+'m:1&r='+Math.random())

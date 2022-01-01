@@ -292,20 +292,16 @@ export class ArduinoZone extends TimeSlots {
 
 
 let zones = []
-let ti = {}
-ti.end = new Date('2021.12.25 00:00:00')/1000
-ti.begin = ti.end-2*24*3600
 const width = 350
 const height = 250
 const barw = 1
 
-export default function TimeDiagramsSet() {
+export default function TimeDiagramsSet(props) {
   
-  const [timeInterval, setTimeInterval] = React.useState(ti)
+  const [timeInterval, setTimeInterval] = React.useState(props.timeInterval)
   const [dataset, setDataset] = React.useState([])
   const [selectedDate, setSelectedDate] = React.useState(0)
 
-  let numberOfZones = 3
   React.useEffect(()=>{
     zones.push(new ArduinoZone('./log/',2,'white','white','red'))
 		zones.push(new ArduinoZone('./log/',3,'white','white','red'))

@@ -5,6 +5,8 @@
 	white-space: nowrap;
 	padding: 3px 6px;
 	margin: 0;
+	margin-top: 4px;
+	margin-right: 4px;
 	cursor: pointer;
 }
 .button:active, .button.active, .button.active:hover {
