@@ -302,8 +302,8 @@ export default function TimeDiagramsSet(props) {
   const [dataset, setDataset] = React.useState([])
   const [selectedDate, setSelectedDate] = React.useState(0)
 	React.useEffect(()=>{
-		setTimeInterval(props.timeInterval)
-	},[props.timeInterval])
+		setTimeInterval( ti=>({begin: props.timeInterval.end-ti.end+ti.begin, end: props.timeInterval.end}) )
+	},[props.timeInterval.end])
   React.useEffect(()=>{
     zones.push(new ArduinoZone('./log/',2,'white','white','red'))
 		zones.push(new ArduinoZone('./log/',3,'white','white','red'))

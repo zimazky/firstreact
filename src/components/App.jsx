@@ -23,10 +23,13 @@ export default function () {
 
   React.useEffect( ()=>{
     const end = Date.now()/1000
-    console.log('end',end)
+    let refreshInterval
     arduinoapi.getInfo( text=>{
       setState(ArduinoController.parseInfo(text))
       setTimeInterval({begin: end-2*24*3600, end})
+      refreshInterval = setInterval(()=>{
+        setTimeInterval(ti=>({...ti, end: Date.now()/1000}))
+      }, 1200000)
     })
     const i = setInterval(()=>{
       arduinoapi.getInfo(
@@ -34,7 +37,10 @@ export default function () {
         ()=>setState(s => ({...s, version: 'offline'}))
       )
     }, 10000)
-    return () => clearInterval(i)
+    return () => {
+      clearInterval(i)
+      if(refreshInterval) clearInterval(refreshInterval)
+    }
   }, [])
 
   const onSetTemperature = React.useCallback( zone => {
