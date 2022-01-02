@@ -301,16 +301,14 @@ export default function TimeDiagramsSet(props) {
   const [timeInterval, setTimeInterval] = React.useState(props.timeInterval)
   const [dataset, setDataset] = React.useState([])
   const [selectedDate, setSelectedDate] = React.useState(0)
-
+	React.useEffect(()=>{
+		setTimeInterval(props.timeInterval)
+	},[props.timeInterval])
   React.useEffect(()=>{
     zones.push(new ArduinoZone('./log/',2,'white','white','red'))
 		zones.push(new ArduinoZone('./log/',3,'white','white','red'))
 
-    zones.forEach((v)=>{v.onload = ()=>{
-      setTimeInterval((prevTimeInterval)=>{
-        return {...prevTimeInterval}
-      })
-		}})
+    zones.forEach((v)=>{v.onload = ()=>setTimeInterval( ti=>( {...ti}) )})
   },[])	
 
   React.useEffect(()=>{

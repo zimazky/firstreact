@@ -19,9 +19,15 @@ ti.begin = ti.end-2*24*3600
 
 export default function () {
   const [state,setState] = React.useState({version:'offline', unixtime: 0, zones})
+  const [timeInterval, setTimeInterval] = React.useState(ti)
 
   React.useEffect( ()=>{
-    arduinoapi.getInfo( text=>setState(ArduinoController.parseInfo(text)) )
+    const end = Date.now()/1000
+    console.log('end',end)
+    arduinoapi.getInfo( text=>{
+      setState(ArduinoController.parseInfo(text))
+      setTimeInterval({begin: end-2*24*3600, end})
+    })
     const i = setInterval(()=>{
       arduinoapi.getInfo(
         text=>setState(ArduinoController.parseInfo(text)),
@@ -66,7 +72,7 @@ export default function () {
           />)}
         </div>
         <div className={styles.diagramsbox}>
-          <TimeDiagramsSet timeInterval={ti}></TimeDiagramsSet>
+          <TimeDiagramsSet timeInterval={timeInterval}></TimeDiagramsSet>
         </div>
         <div className={styles.info}>{JSON.stringify(state)}</div>
       </div>
