@@ -22,40 +22,37 @@ export default function () {
 
   React.useEffect( ()=>{
     arduinoapi.getInfo( text=>setState(ArduinoController.parseInfo(text)) )
-
     const i = setInterval(()=>{
       arduinoapi.getInfo(
         text=>setState(ArduinoController.parseInfo(text)),
-        error=>setState(s => ({...s, version: 'offline'}))
+        ()=>setState(s => ({...s, version: 'offline'}))
       )
     }, 10000)
     return () => clearInterval(i)
   }, [])
 
-  const onSetTemperature = React.useCallback((zone) => {
+  const onSetTemperature = React.useCallback( zone => {
     arduinoapi.setTemperature(
       zone.id, 
       zone.targetTemperature,
-      text => {
-        setState( s => {
-          const zones = s.zones.map( rec => rec.id==zone.id ? zone : rec )
-          return {...s, zones}
-        })
-      }
+      () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone.id ? zone : rec )}) ),
+      () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone.id ? {...rec,targetTemperature: {}} : rec )}) )
     )
   })
 
-  const onSetPowerControl = React.useCallback((zone) => {
+  const onSetPowerControl = React.useCallback( zone => {
     const i = zone-1
     if(state.zones[i].onControl) {
-      arduinoapi.powerOff(zone)
-        .then(()=>console.log('powerOff',zone))
-        .catch(()=>console.log('Fail powerOff',zone))
+      arduinoapi.powerOff(
+        zone,
+        () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone ? {...rec, onControl: 0} : rec )}) )
+      )
       return
     }
-    arduinoapi.powerOn(zone)
-      .then(()=> console.log('powerOn',zone))
-      .catch(()=>console.log('Fail powerOn',zone))
+    arduinoapi.powerOn(
+      zone,
+      () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone ? {...rec, onControl: 1} : rec )}) )
+    )
   })
 
   return (
@@ -63,7 +60,7 @@ export default function () {
       <Header firmware={state.version} controllerDateTime={new Date(state.unixtime*1000).toLocaleTimeString()}/>
       <div className={styles.main}>
         <div className={styles.controlsbox}>
-          {state.zones.map((zone, index) => <TemperatureControl key={index} zone={zone} 
+          {state.zones.map((zone, index) => <TemperatureControl key={index} zone={zone}
           setTemperature={onSetTemperature}
           setPowerControl={onSetPowerControl}
           />)}

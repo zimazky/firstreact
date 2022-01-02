@@ -15,23 +15,38 @@ export default class ArduinoController {
 
   setTemperature(zone, temperature, response = ()=>{}, reject = ()=>{}) {
     return fetch(this.url+'/?s'+zone+'t:'+ Math.round(temperature*10)+'&r='+Math.random())
-    .then(r=>r.text())
-    .then(text => {
-      console.log('ArduinoController set temperature')
-      response(text)
-    })
-    .catch(error => {
-      console.log('ArduinoController not available')
-      reject(error)
-    })
-}
-
-  powerOn(zone) {
-    return fetch(this.url+'/?s'+zone+'m:1&r='+Math.random())
+      .then(() => {
+        console.log('ArduinoController set temperature')
+        response()
+      })
+      .catch(() => {
+        console.log('ArduinoController set temperature failure')
+        reject()
+      })
   }
 
-  powerOff(zone) {
+  powerOn(zone, response = ()=>{}, reject = ()=>{}) {
+    return fetch(this.url+'/?s'+zone+'m:1&r='+Math.random())
+      .then(() => {
+        console.log('Power On', zone)
+        response()
+      })
+      .catch(() => {
+        console.log('Power On failure')
+        reject()
+      })
+  }
+
+  powerOff(zone, response = ()=>{}, reject = ()=>{}) {
     return fetch(this.url+'/?s'+zone+'m:0&r='+Math.random())
+      .then(() => {
+        console.log('Power Off', zone)
+        response()
+      })
+      .catch(() => {
+        console.log('Power Off failure')
+        reject()
+      })
   }
 
   static parseInfo(text) {
