@@ -1,6 +1,40 @@
-import {IrregularFloatDataset} from '../utils/irregularDS.js'
+import IrregularFloatDataset from '../utils/irregularDS.js'
 
 export default class ArduinoLogAPI {
+  static ERRORS = ['OK','Busy','Queued']
+
+  constructor(url, threads=8) {
+    this.threads = threads
+    this.queue = []
+		this.url = url
+	}
+
+	// Функция загрузки LOG-файла
+	getLog(name, onLoad=()=>{}, onError=()=>{}, onFinally=()=>{}) {
+  	//ограничиваем одновременную загрузку таймслотов
+    if (this.queue.length>=this.threads) return 1
+    //не загружать которые в очереди
+		if(this.queue.includes(name)) return 2
+    this.queue.push(name)
+    //console.log(this.queue)
+    //console.log(name)
+    fetch(this.url+name)
+      .then(r=>r.text())
+      .then((text)=>{
+        onLoad(text)
+      })
+      .catch((error)=>{
+        console.log(name)
+        console.log('loading error', error)
+        onError()
+      })
+      .finally(()=>{
+				this.queue = this.queue.filter(s=>s!=strId)
+        onFinally()
+      })
+    return 0
+	}
+
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Функция парсинга текстовых данных, полученных от устройства Arduino.

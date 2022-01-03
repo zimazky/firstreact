@@ -16,9 +16,7 @@ export class ArduinoZone extends TimeSlots {
 		this.pcolor = pcolor; // цвет линии подачи мощности
 		this.showpower = false;// показывать подачу мощности на диаграмме
 		
-		this.parse = function(t, textdata) {
-			return ArduinoLogAPI.parse(textdata,t)
-		}
+		this.parse = ArduinoLogAPI.parse
 	}
 
 	preparezdata(timeinterval, tstep) {

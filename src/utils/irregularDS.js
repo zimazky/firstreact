@@ -17,7 +17,7 @@
 //           'ohlc'     - open, high, low, close значения в ячейке
 //           'differential' - приращения между границами баров (пока не реализовано)
 ///////////////////////////////////////////////////////////////////////////////
-export class IrregularFloatDataset {
+export default class IrregularFloatDataset {
 	constructor(time, zmode = 'stepped') {
 		this.time = time; // время начала датасета
 		this.zmode = zmode; // режим отображения на регулярную сетку

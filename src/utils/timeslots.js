@@ -1,4 +1,4 @@
-import DateTime from "./datetime"
+import DateTime from "./datetime.js"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Абстрактный Класс набора датасетов, разделенных на временные кусочки - таймслоты
@@ -10,15 +10,14 @@ export default class TimeSlots {
   constructor(url, ext, threads=8, timezone=3) {
     this.datetime = new DateTime(timezone)
     this.threads = threads
-		this.url = url;
-		this.ext = ext;
+		this.url = url
+		this.ext = ext
 
-		this.array = []; // массив таймслотов {time,status,data}
-		this.tryes = []; // массив с числом попыток загрузки данных для таймслота
+		this.array = [] // массив таймслотов {time,status,data}
 		// функция парсинга возвращает датасет
-		this.parse = function(t, textdata) { return {time:t,status:0} }
+		this.parse = (timestamp, textdata)=>({flag:0})
 		// функция, выполняемая после загрузки слота
-		this.onload = function() {}
+		this.onload = ()=>{}
 	}
 
 	//=========================================================================
@@ -26,7 +25,7 @@ export default class TimeSlots {
 	//=========================================================================
 	load(timestamp) {
 
-  	//исключаем одновременную загрузку таймслотов
+  	//ограничиваем одновременную загрузку таймслотов
     if (TimeSlots.queue.length>=this.threads) return
     //исключаем повторную загрузку слота
     if(typeof(this.array[timestamp]) !== 'undefined') return
@@ -38,13 +37,14 @@ export default class TimeSlots {
     TimeSlots.queue.push(strId)
 		const url = this.url+strId
     //console.log(TimeSlots.queue)
-		console.log(url)
+    //console.log(url)
     return fetch(url)
       .then(r=>r.text())
       .then((text)=>{
-        this.array[timestamp] = this.parse(timestamp, text)
+        this.array[timestamp] = this.parse(text, timestamp)
       })
       .catch((error)=>{
+        console.log(url)
         console.log('loading error', error)
         this.array[timestamp] = {flag:0}
       })
@@ -60,13 +60,11 @@ export default class TimeSlots {
 	// Реализовано простое представление объекта zdata, состоящее из 
 	// массива и значений min и max
 	//=========================================================================
-	preparezdata(timeinterval, tstep) {
-		var min = Number.MAX_VALUE, max = Number.MIN_VALUE;
-		var zdata = [];
-		for(var t=timeinterval.begin;t<timeinterval.end;t+=tstep) {
-			zdata.push({flag:0});
-		}
-		return {zdata:zdata, min:min, max:max};
+	preparezdata({begin, end}, tstep) {
+		const min = -Infinity, max = Infinity
+		const data = []
+		for(let t=begin;t<end;t+=tstep) data.push({flag:0})
+		return {data, min, max}
 	}
 	//=========================================================================
 	// Функция для получения перемасштабированного регуляризованного датасета 
@@ -77,11 +75,9 @@ export default class TimeSlots {
 	// Функция абстрактна, не исходит из конкретного представления объекта zdata
 	//=========================================================================
 	getzdata({begin, end}, tstep) {
-		var zdata = this.preparezdata(timeinterval, tstep);
+		var zdata = this.preparezdata(timeinterval, tstep)
 		for(var t=this.datetime.getBeginDayTimestamp(begin);t<end;t+=86400) {
-			if(typeof(this.array[t]) === 'undefined') {
-				this.load(t, 'text'); // подгрузка данных таймслота
-			}
+			if(typeof(this.array[t]) === 'undefined') this.load(t) // подгрузка данных таймслота
 			else {
 				// заполняем массив zdata перемасштабированными данными
 				if(this.array[t].flag != 0)
