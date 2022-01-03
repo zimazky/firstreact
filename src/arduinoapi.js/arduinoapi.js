@@ -64,7 +64,7 @@ export default class ArduinoController {
         onControl:+m, powerOn:+p, targetTemperatureDelta: dt/10., sensorState:+s})
       return parseZonesInfo(i2, a, id)
     }
-		return {version, numofz:+numofz, unixtime:+unixtime, starttime:+starttime, 
+		return {version:'ver.'+version, numofz:+numofz, unixtime:+unixtime, starttime:+starttime, 
       lastsynctime:+lastsynctime, lastsyncdelta:+lastsyncdelta, lastsyncinterval:+lastsyncinterval, 
       tickcounter:+tickcounter, zones: parseZonesInfo(zonesinfo)}
 	}

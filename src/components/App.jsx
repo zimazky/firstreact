@@ -13,13 +13,11 @@ const zones = [
     onControl: 0, powerOn: 0, sensorState: -3},
 ]
 const arduinoapi = new ArduinoController('http://192.168.2.2')
-const ti = {}
-ti.end = new Date('2022.01.01 00:00:00')/1000
-ti.begin = ti.end-2*24*3600
+const tiend = new Date('2022.01.02 00:00:00')/1000
 
-export default function () {
+export default function App() {
   const [state,setState] = React.useState({version:'offline', unixtime: 0, zones})
-  const [timeInterval, setTimeInterval] = React.useState(ti)
+  const [timeInterval, setTimeInterval] = React.useState({begin:tiend-2*24*3600,end:tiend})
 
   React.useEffect( ()=>{
     const end = Date.now()/1000
@@ -73,8 +71,8 @@ export default function () {
       <div className={styles.main}>
         <div className={styles.controlsbox}>
           {state.zones.map((zone, index) => <TemperatureControl key={index} zone={zone}
-          setTemperature={onSetTemperature}
-          setPowerControl={onSetPowerControl}
+          onSetTemperature={onSetTemperature}
+          onSetPowerControl={onSetPowerControl}
           />)}
         </div>
         <div className={styles.diagramsbox}>

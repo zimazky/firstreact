@@ -3,19 +3,17 @@ import Button from './Button.jsx';
 import ParameterButton from './ParameterButton.jsx';
 import styles from './TemperatureControl.module.css'
 
-export default function({zone, setTemperature, setPowerControl}) {
+export default function({zone, onSetTemperature, onSetPowerControl}) {
   return (
   <div className={styles.controlbox}>
     <div className={styles.header}><div className={styles.indicator}></div>
       {'ZONE'+zone.id+' Sensor: '+ArduinoController.sensorState(zone.sensorState)}
     </div>
     <div>
-      <Button active={zone.onControl?true:false} onClick={()=>setPowerControl(zone.id)}>PWRCTRL</Button>
+      <Button active={zone.onControl?true:false} onClick={()=>onSetPowerControl(zone.id)}>PWRCTRL</Button>
       <Button active={zone.powerOn?true:false} disabled>PWR</Button>
-      <Button>CONFIG</Button>
-    </div>
-    <div>
       <Button onClick={()=>{console.log('showpwr_button')}}>SHOWPWR</Button>
+      <Button>CONFIG</Button>
     </div>
     <div>
       <ParameterButton 
@@ -23,7 +21,7 @@ export default function({zone, setTemperature, setPowerControl}) {
         displayedValue={zone.temperature.toFixed(1) + '°'}
         controlledValue={zone.targetTemperature}
         controlledValue2={zone.targetTemperatureDelta}
-        update={(newTargetTemperature)=>{setTemperature({...zone,targetTemperature:newTargetTemperature})}}
+        update={t=>onSetTemperature({...zone,targetTemperature:t})}
       />
       <ParameterButton 
         parameterName='humidity'
