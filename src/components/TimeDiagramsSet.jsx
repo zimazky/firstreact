@@ -1,4 +1,4 @@
-import ArduinoControllerLogData from '../arduinoapi/ArduinoData.js'
+import ArduinoLogController from '../arduinoapi/arduinoLogController.js'
 import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
 import Modal from './Modal.jsx';
 import {TimeTable} from './Table.jsx'
@@ -13,18 +13,18 @@ export default function TimeDiagramsSet(props) {
   const [timeInterval, setTimeInterval] = React.useState(props.timeInterval)
   const [dataset, setDataset] = React.useState([])
   const [selectedDate, setSelectedDate] = React.useState(0)
-  const logController = React.useRef(new ArduinoControllerLogData('./log/',()=>setTimeInterval( ti=>({...ti}) ))).current
+  const logController = React.useRef(new ArduinoLogController('./log/',()=>setTimeInterval( ti=>({...ti}) ))).current
 	React.useEffect(()=>{
 		setTimeInterval( ti=>({begin: props.timeInterval.end-ti.end+ti.begin, end: props.timeInterval.end}) )
 	},[props.timeInterval.end])
   React.useEffect(()=>{
-		logController.addThermoSensor(2,['white','white','red'])
-		logController.addThermoSensor(3,['white','white','red'])
+		logController.addThermalSensor(2,['white','white','red'])
+		logController.addThermalSensor(3,['white','white','red'])
   },[])	
 
   React.useEffect(()=>{
     let tstep = (barw*(timeInterval.end-timeInterval.begin)/width)
-		const newDataset = logController.getThermoSensorsRegData(timeInterval,tstep)
+		const newDataset = logController.getThermalSensorsRegData(timeInterval,tstep)
     setDataset(newDataset)
   },[timeInterval])
 

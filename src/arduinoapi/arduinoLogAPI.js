@@ -81,7 +81,7 @@ export default class ArduinoLogAPI {
   // 6. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
   // 7. Состояние датчика.  Тип int, выводится полное значение.
 
-  static parseThermoSensorData = function(textdata, [tDS=[],hDS=[],pDS=[]] ) {
+  static parseThermalSensorData = function(textdata, [tDS=[],hDS=[],pDS=[]] ) {
    
     if(!textdata) return [tDS, hDS, pDS]
 

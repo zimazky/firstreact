@@ -13,7 +13,7 @@ const zones = [
     onControl: 0, powerOn: 0, sensorState: -3},
 ]
 const arduinoapi = new ArduinoController('http://192.168.2.2')
-const tiend = new Date('2022.01.02 00:00:00')/1000
+const tiend = new Date('2022.01.04 00:00:00')/1000
 
 export default function App() {
   const [state,setState] = React.useState({version:'offline', unixtime: 0, zones})
