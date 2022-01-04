@@ -92,7 +92,7 @@ export default class ArduinoLogAPI {
     let f = 0
     strings.forEach(string => {
       const event = string.split(';')
-      if(event.length < 2) return
+      if(event.length <= 2) return
       const flag = event[0]
       if(flag & 128) { // строка с полными данными
         temperature = 0; humidity = 0; targetTemperature = 0; targetTemperatureDelta = 0
@@ -146,5 +146,62 @@ export default class ArduinoLogAPI {
 
     return [tDS, hDS, pDS]
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////
+  // Функция парсинга данных с датчика давления гидросистемы
+  //
+  // Лог давления в системе водоснабжения:
+  // Строка представляет собой событие. Событие может выводиться двумя типами записей: 
+  //   - полная запись (первая запись в файле лога или после перезагрузки);
+  //   - разностная запись (записывается разность между текущим значением и предыдущим).
+  // Порядок полей при выводе событий:
+  // 1. Флаги событий int8_t ([+] - используются для вывода графиков)
+  //    1 - Изменение фактического давления [+]
+  //    2 - Признак непреобразованных данных (1 - raw data, 0 - pressure*1000) [+]
+  //    4 - (Резерв) Заданный предел отключения насоса
+  //    8 - (Резерв) Заданный предел сухого хода
+  //  128 - Признак полной записи (выводятся все поля в виде полного значения)
+  // 2. Метка времени. Тип unixtime, выводится разница с предыдущим значением в потоке.
+  // Далее в соответствии с установленными битами флагов событий выводятся параметры:
+  // 3. Фактическое давление. Тип int, выводится разница с предыдущим значением в потоке.
+  //
+  static parseHydroSensorData = function(textdata, pressureDataset=[]) {
+    
+    if(!textdata) return pressureDataset
+
+    const strings = textdata.split('\n')
+    let time = 0
+    let pr = 0
+    let pr_out = 0
+    strings.forEach(string => {
+      let event = string.split(';')
+      if(event.length <= 2) return
+      if(event[0] & 128) { // строка с полными данными
+        pr = 0
+        pr_out = 0
+        time = parseInt(event[1])
+        let j = 2
+        if(event[0] & 1 ) pr = +event[j++]
+      }
+      else { // строка с разностными данными
+        if(time == 0) return //еще не было полных данных
+        let ptime = parseInt(event[1])
+        // исправление ошибки в логах, отрицательная корректировка времени выводится как положительное число
+        ptime = (ptime>2147483647)?ptime-4294967296:ptime
+        if(ptime<0) console.log(ptime, time, pr)
+        time += ptime
+        let j = 2
+        if (event[0] & 1) pr += +(event[j++])
+      }
+      // преобразование к нормальному представлению давления
+      pr_out = (event[0] & 2) ? 5.*(pr-102.3)/818.4 : pr/1000.
+      // проверка на корректность данных
+      if(pr_out>=-1 && pr_out<=5) pressureDataset.push({flag: 1, time: time, value: pr_out})
+    })
+    // добавляем завершающие данные (на случай, если не было изменений в конце дня)
+    if(pressureDataset.data.length) pressureDataset.push({flag: 1, time: time, value: pr_out})
+    return pressureDataset;
+  }
+
 
 }

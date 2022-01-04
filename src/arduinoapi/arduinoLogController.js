@@ -58,10 +58,38 @@ class HydroSensorData {
     this.ext = 'H'+id
     this.controller = parent.logController
     this.timezone = parent.timezone
-    this.controller = controller
     this.color = color
-    this.data = []
+    this.onload = parent.onload
+    this.timeslots = []
   }
+
+  load(timestamp) {
+    this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
+      this.timeslots[timestamp] = ArduinoLogAPI
+			.parseHydroSensorData(text, new IrregularFloatDataset(timestamp))
+    }, ()=>{
+      this.timeslots[timestamp] = {flag:0}
+    }, ()=>{
+      this.onload()
+    })
+	}
+
+  getRegData(timeinterval, tstep) {
+		let a = {zdata:[],min:Number.MAX_VALUE,max:Number.MIN_VALUE}
+		
+		for(let t=timeinterval.begin;t<timeinterval.end;t+=tstep) {
+      a.zdata.push({flag:0})
+		}
+
+		for(let t=getBeginDayTimestamp(timeinterval.begin,this.timezone);t<timeinterval.end;t+=86400) {
+			if(typeof(this.timeslots[t]) === 'undefined') this.load(t)
+			else if(this.timeslots[t].flag != 0) {
+          a = this.timeslots[t].fillzdata(timeinterval,tstep,a)
+			}
+		}
+		return a
+	}
+
 }
 
 export default class ArduinoLogController {
@@ -81,5 +109,9 @@ export default class ArduinoLogController {
   getThermalSensorsRegData(timeinterval, tstep) {
     return this.thermoSensors.map(d=>d.getRegData(timeinterval,tstep))
   }
+  getHydroSensorsRegData(timeinterval, tstep) {
+    return this.hydroSensors.map(d=>d.getRegData(timeinterval,tstep))
+  }
+
 }
 
