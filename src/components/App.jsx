@@ -2,7 +2,7 @@ import Header from './Header.jsx';
 import TemperatureControl from './TemperatureControl.jsx'
 import TimeDiagramsSet from './TimeDiagramsSet.jsx'
 import styles from './App.module.css'
-import ArduinoController from '../arduinoapi.js/arduinoapi.js';
+import ArduinoController from '../arduinoapi/arduinoAPI.js'
 
 const zones = [
   {id: 1, temperature: 14.1, targetTemperature: 23.5, targetTemperatureDelta: 0.2, humidity: 54.3, 

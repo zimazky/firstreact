@@ -1,4 +1,4 @@
-import ArduinoController from '../arduinoapi.js/arduinoapi.js';
+import ArduinoController from '../arduinoapi/arduinoAPI.js';
 import Button from './Button.jsx';
 import ParameterButton from './ParameterButton.jsx';
 import styles from './TemperatureControl.module.css'

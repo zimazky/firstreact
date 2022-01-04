@@ -1,16 +1,29 @@
-import IrregularFloatDataset from '../utils/irregularDS.js'
+
+function getBeginDayTimestamp(timestamp, timezone) {
+  return (~~((timestamp+timezone*3600)/86400))*86400-timezone*3600
+}
+
+function getYYYYMMDD(timestamp, timezone) {
+  const date = new Date((timestamp+timezone*3600)*1000)
+  var d = date.getUTCDate()
+  var m = date.getUTCMonth()+1
+  var y = date.getUTCFullYear()
+  return y+((m<10)?'0':'')+m+((d<10)?'0':'')+d
+}
+
 
 export default class ArduinoLogAPI {
-  static ERRORS = ['OK','Busy','Queued']
+  static ERRORS = ['OK','Busy','Queued','NotYet']
 
-  constructor(url, threads=8) {
+  constructor(url, threads=8, timezone=3) {
     this.threads = threads
     this.queue = []
 		this.url = url
+    this.timezone = timezone
 	}
 
 	// Функция загрузки LOG-файла
-	getLog(name, onLoad=()=>{}, onError=()=>{}, onFinally=()=>{}) {
+	getLogByName(name, onLoad=()=>{}, onError=()=>{}, onFinally=()=>{}) {
   	//ограничиваем одновременную загрузку таймслотов
     if (this.queue.length>=this.threads) return 1
     //не загружать которые в очереди
@@ -29,12 +42,19 @@ export default class ArduinoLogAPI {
         onError()
       })
       .finally(()=>{
-				this.queue = this.queue.filter(s=>s!=strId)
+				this.queue = this.queue.filter(s=>s!=name)
         onFinally()
       })
     return 0
 	}
-
+	
+  // Функция загрузки LOG-файла по timestamp
+	getLogByTimestamp(type, timestamp, onLoad=()=>{}, onError=()=>{}, onFinally=()=>{}) {
+    //не загружать будущие таймслоты
+		if (timestamp>getBeginDayTimestamp(Date.now()/1000, this.timezone)) return 3
+    const name = getYYYYMMDD(timestamp, this.timezone)+'.'+type
+    return this.getLogByName(name, onLoad, onError, onFinally)
+  }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Функция парсинга текстовых данных, полученных от устройства Arduino.
@@ -61,12 +81,9 @@ export default class ArduinoLogAPI {
   // 6. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
   // 7. Состояние датчика.  Тип int, выводится полное значение.
 
-  static parse = function(textdata, timestamp) {
-    const tDataset = new IrregularFloatDataset(timestamp)
-    const hDataset = new IrregularFloatDataset(timestamp)
-    const pDataset = new IrregularFloatDataset(timestamp)
-    
-    if(!textdata) return {t:tDataset, h:hDataset, p:pDataset}
+  static parseThermoSensorData = function(textdata, [tDS=[],hDS=[],pDS=[]] ) {
+   
+    if(!textdata) return [tDS, hDS, pDS]
 
     const strings = textdata.split('\n')
     let time = 0
@@ -85,13 +102,13 @@ export default class ArduinoLogAPI {
         if(flag & 1) temperature = +event[j++]
         if(flag & 2) humidity = +event[j++]
         power = (flag & 4) ? 1 : 0
-        pDataset.push({flag: 1, time, value: power})
+        pDS.push({flag: 1, time, value: power})
         if(flag & 16) targetTemperature = +event[j++]
         if(flag & 32) targetTemperatureDelta = +event[j++]
         if(flag & 64) sensorState = +event[j++]
         if(sensorState == 0) { // добавляем только если датчик был без ошибок
-          tDataset.push({flag: 0, time, value: temperature/10.})
-          hDataset.push({flag: 0, time, value: humidity/10.})
+          tDS.push({flag: 0, time, value: temperature/10.})
+          hDS.push({flag: 0, time, value: humidity/10.})
         }
       }
       else { // строка с разностными данными
@@ -106,28 +123,28 @@ export default class ArduinoLogAPI {
         if(flag & 2) humidity += +event[j++]
         if(flag & 4) {
           // добавляем только если произошли изменения 0 -> 1
-          if(!power) pDataset.push({flag: 1, time, value: power=1})
+          if(!power) pDS.push({flag: 1, time, value: power=1})
         }
         else {
           // добавляем только если произошли изменения 1 -> 0
-          if(power) pDataset.push({flag: 1, time, value: power=0})
+          if(power) pDS.push({flag: 1, time, value: power=0})
         }
         if(flag & 16) targetTemperature += +event[j++]
         if(flag & 32) targetTemperatureDelta += +event[j++]
         if(flag & 64) sensorState = +event[j++]
         f = (sensorState == 0) ? 1 : 0
         if(sensorState == 0) {// добавляем только если датчик был без ошибок
-          if(flag & 1) tDataset.push({flag: f, time, value: temperature/10.})
-          if(flag & 2) hDataset.push({flag: f, time, value: humidity/10.})
+          if(flag & 1) tDS.push({flag: f, time, value: temperature/10.})
+          if(flag & 2) hDS.push({flag: f, time, value: humidity/10.})
         }
       }
     })
     // добавляем завершающие данные (на случай, если не было изменений в конце дня)
-    if(tDataset.data.length != 0) tDataset.push({flag: f, time, value: temperature/10.})
-    if(hDataset.data.length != 0) hDataset.push({flag: f, time, value: humidity/10.})
-    if(pDataset.data.length != 0) pDataset.push({flag: 1, time, value: power})
+    if(tDS.data.length != 0) tDS.push({flag: f, time, value: temperature/10.})
+    if(hDS.data.length != 0) hDS.push({flag: f, time, value: humidity/10.})
+    if(pDS.data.length != 0) pDS.push({flag: 1, time, value: power})
 
-    return {t:tDataset, h:hDataset, p:pDataset}
+    return [tDS, hDS, pDS]
   }
 
 }
