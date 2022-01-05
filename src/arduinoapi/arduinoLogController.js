@@ -100,6 +100,7 @@ export default class ArduinoLogController {
     this.onload = onload
     this.timezone = timezone
   }
+  setOnLoad(fn) {this.onload = fn}
   addThermalSensor(id,[tcolor,hcolor,pcolor]) {
     this.thermoSensors.push(new ThermalSensorData(id,this,[tcolor,hcolor,pcolor]))
   }

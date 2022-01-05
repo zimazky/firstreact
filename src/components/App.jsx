@@ -1,8 +1,9 @@
-import Header from './Header.jsx';
+import ArduinoController from '../arduinoapi/arduinoAPI.js'
+import ArduinoLogController from '../arduinoapi/arduinoLogController.js'
+import Header from './Header.jsx'
 import TemperatureControl from './TemperatureControl.jsx'
 import TimeDiagramsSet from './TimeDiagramsSet.jsx'
 import styles from './App.module.css'
-import ArduinoController from '../arduinoapi/arduinoAPI.js'
 
 const zones = [
   {id: 1, temperature: 14.1, targetTemperature: 23.5, targetTemperatureDelta: 0.2, humidity: 54.3, 
@@ -12,37 +13,44 @@ const zones = [
   {id: 3, temperature: 5.9, targetTemperature: 0., targetTemperatureDelta: 0., humidity: 85.1, 
     onControl: 0, powerOn: 0, sensorState: -3},
 ]
-const arduinoapi = new ArduinoController('http://192.168.2.2')
-const tiend = new Date('2022.01.04 00:00:00')/1000
+
+const hostname = window.location.hostname
+console.log(hostname)
+const logUrl = (hostname=='192.168.2.2' || hostname=='localhost')?'http://192.168.1.1:4480/data/log/':'./log/'
+const logThreads = (hostname=='192.168.2.2')?1:8
+const arduinoController = new ArduinoController('http://192.168.2.2')
+const logController = new ArduinoLogController(logUrl,()=>{},logThreads)
+const tiend = (hostname=='192.168.2.2' || hostname=='localhost' || hostname=='192.168.1.1')?
+  Date.now()/1000:
+  new Date('2022.01.05 00:00:00')/1000
+const isOnline = (hostname=='192.168.2.2' || hostname=='localhost' || hostname=='192.168.1.1')?true:false
 
 export default function App() {
   const [state,setState] = React.useState({version:'offline', unixtime: 0, zones})
   const [timeInterval, setTimeInterval] = React.useState({begin:tiend-2*24*3600,end:tiend})
 
   React.useEffect( ()=>{
-    const end = Date.now()/1000
-    let refreshInterval
-    arduinoapi.getInfo( text=>{
-      setState(ArduinoController.parseInfo(text))
-      setTimeInterval({begin: end-2*24*3600, end})
-      refreshInterval = setInterval(()=>{
+    if(isOnline) {
+      //сдвиг графика каждые 20 мин
+      const refreshInterval = setInterval(()=>{
         setTimeInterval(ti=>({...ti, end: Date.now()/1000}))
       }, 1200000)
-    })
-    const i = setInterval(()=>{
-      arduinoapi.getInfo(
-        text=>setState(ArduinoController.parseInfo(text)),
-        ()=>setState(s => ({...s, version: 'offline'}))
-      )
-    }, 10000)
-    return () => {
-      clearInterval(i)
-      if(refreshInterval) clearInterval(refreshInterval)
+      //получение данных от контроллера каждые 10 сек
+      const i = setInterval(()=>{
+        arduinoController.getInfo(
+          text=>setState(ArduinoController.parseInfo(text)),
+          ()=>setState(s => ({...s, version: 'offline'}))
+        )
+      }, 10000)
+      return () => {
+        clearInterval(i)
+        if(refreshInterval) clearInterval(refreshInterval)
+      }
     }
   }, [])
 
   const onSetTemperature = React.useCallback( zone => {
-    arduinoapi.setTemperature(
+    arduinoController.setTemperature(
       zone.id, 
       zone.targetTemperature,
       () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone.id ? zone : rec )}) ),
@@ -53,13 +61,13 @@ export default function App() {
   const onSetPowerControl = React.useCallback( zone => {
     const i = zone-1
     if(state.zones[i].onControl) {
-      arduinoapi.powerOff(
+      arduinoController.powerOff(
         zone,
         () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone ? {...rec, onControl: 0} : rec )}) )
       )
       return
     }
-    arduinoapi.powerOn(
+    arduinoController.powerOn(
       zone,
       () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone ? {...rec, onControl: 1} : rec )}) )
     )
@@ -76,7 +84,7 @@ export default function App() {
           />)}
         </div>
         <div className={styles.diagramsbox}>
-          <TimeDiagramsSet timeInterval={timeInterval}></TimeDiagramsSet>
+          <TimeDiagramsSet timeInterval={timeInterval} logController={logController}></TimeDiagramsSet>
         </div>
         <div className={styles.info}>{JSON.stringify(state)}</div>
       </div>

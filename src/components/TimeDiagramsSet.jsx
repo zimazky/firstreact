@@ -1,4 +1,3 @@
-import ArduinoLogController from '../arduinoapi/arduinoLogController.js'
 import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
 import Modal from './Modal.jsx';
 import {TimeTable} from './Table.jsx'
@@ -13,11 +12,12 @@ export default function TimeDiagramsSet(props) {
   const [timeInterval, setTimeInterval] = React.useState(props.timeInterval)
   const [dataset, setDataset] = React.useState({thermalData:[],hydroData:[]})
   const [selectedDate, setSelectedDate] = React.useState(0)
-  const logController = React.useRef(new ArduinoLogController('./log/',()=>setTimeInterval( ti=>({...ti}) ))).current
+  const logController = React.useRef(props.logController).current
 	React.useEffect(()=>{
 		setTimeInterval( ti=>({begin: props.timeInterval.end-ti.end+ti.begin, end: props.timeInterval.end}) )
 	},[props.timeInterval.end])
   React.useEffect(()=>{
+    logController.setOnLoad( ()=>setTimeInterval( ti=>({...ti}) ))
 		logController.addThermalSensor(2,['white','white','red'])
 		logController.addThermalSensor(3,['white','white','red'])
 		logController.addHydroSensor(0,['white','white','red'])
