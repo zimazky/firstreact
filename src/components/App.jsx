@@ -20,10 +20,10 @@ const logUrl = (hostname=='192.168.2.2' || hostname=='localhost')?'http://192.16
 const logThreads = (hostname=='192.168.2.2')?1:8
 const arduinoController = new ArduinoController('http://192.168.2.2')
 const logController = new ArduinoLogController(logUrl,()=>{},logThreads)
-const tiend = (hostname=='192.168.2.2' || hostname=='localhost' || hostname=='192.168.1.1')?
+const tiend = (hostname=='192.168.2.2' || hostname=='localhost' || hostname=='192.168.1.1' || hostname=='10.8.0.1')?
   Date.now()/1000:
-  new Date('2022.01.05 00:00:00')/1000
-const isOnline = (hostname=='192.168.2.2' || hostname=='localhost' || hostname=='192.168.1.1')?true:false
+  new Date('2022.01.30 00:00:00')/1000
+const isOnline = (hostname=='192.168.2.2' || hostname=='localhost' || hostname=='192.168.1.1' || hostname=='10.8.0.1')?true:false
 
 export default function App() {
   const [state,setState] = React.useState({version:'offline', unixtime: 0, zones})
