@@ -12,6 +12,7 @@ const zones = [
     onControl: 0, powerOn: 0, sensorState: -3},
   {type: 'Z', id: 3, temperature: 5.9, targetTemperature: 0., targetTemperatureDelta: 0., humidity: 85.1, 
     onControl: 0, powerOn: 0, sensorState: -3},
+  {type: 'H', id: 0, pressure: 2.4},
 ]
 
 const hostname = window.location.hostname
