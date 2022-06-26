@@ -6,11 +6,11 @@ import TimeDiagramsSet from './TimeDiagramsSet.jsx'
 import styles from './App.module.css'
 
 const zones = [
-  {id: 1, temperature: 14.1, targetTemperature: 23.5, targetTemperatureDelta: 0.2, humidity: 54.3, 
+  {type: 'Z', id: 1, temperature: 14.1, targetTemperature: 23.5, targetTemperatureDelta: 0.2, humidity: 54.3, 
     onControl: 0, powerOn: 0, sensorState: -3},
-  {id: 2, temperature: 15.2, targetTemperature: 21.2, targetTemperatureDelta: 0.1, humidity: 48.1, 
+  {type: 'Z', id: 2, temperature: 15.2, targetTemperature: 21.2, targetTemperatureDelta: 0.1, humidity: 48.1, 
     onControl: 0, powerOn: 0, sensorState: -3},
-  {id: 3, temperature: 5.9, targetTemperature: 0., targetTemperatureDelta: 0., humidity: 85.1, 
+  {type: 'Z', id: 3, temperature: 5.9, targetTemperature: 0., targetTemperatureDelta: 0., humidity: 85.1, 
     onControl: 0, powerOn: 0, sensorState: -3},
 ]
 
@@ -78,7 +78,7 @@ export default function App() {
       <Header firmware={state.version} controllerDateTime={new Date(state.unixtime*1000).toLocaleTimeString()}/>
       <div className={styles.main}>
         <div className={styles.controlsbox}>
-          {state.zones.map((zone, index) => <TemperatureControl key={index} zone={zone}
+          {state.zones.filter(zone=>zone.type==='Z').map((zone, index) => <TemperatureControl key={index} zone={zone}
           onSetTemperature={onSetTemperature}
           onSetPowerControl={onSetPowerControl}
           />)}
