@@ -108,7 +108,11 @@ export default class ArduinoController {
         // 6. Продолжительность ручного полива (mduration)
         case 'I': {
           const [id, p, s, d, ds, md, ...i2] = data
-          a.push({type, id:+id, poweron:+p, start:+s, duration:+d, days:+ds, mduration:+md})
+          const [is, idd, ids] = [+s, +d, +ds]
+          const start = [is&255, (is>>8)&255, (is>>16)&255, (is>>24)&255]
+          const duration = [idd&255, (idd>>8)&255, (idd>>16)&255, (idd>>24)&255]
+          const days = [ids&255, (ids>>8)&255, (ids>>16)&255, (ids>>24)&255]
+          a.push({type, id:+id, poweron:+p, start, duration, days, mduration:+md})
           return parseZonesInfo(i2, a, id)
         }
 
