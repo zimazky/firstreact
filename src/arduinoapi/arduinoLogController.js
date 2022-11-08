@@ -1,4 +1,4 @@
-import ArduinoLogAPI from './arduinoLogAPI.js'
+import ArduinoLogAPI from './arduinoLogAPI'
 import IrregularFloatDataset from '../utils/irregularDS.js'
 
 function getBeginDayTimestamp(timestamp, timezone) {

@@ -1,5 +1,10 @@
+type HydroSensorData = {
+  flag: number
+  pressure: number
+}
+
 export default class HydroSensorLogParser {
-  pr = 0
+  private pressure = 0
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Функция парсинга данных с датчика давления гидросистемы из лога старого образца
@@ -21,22 +26,22 @@ export default class HydroSensorLogParser {
   //
   // Возвращает структуру {flag, pressure} при успехе
 
-  parseEventOld(event) {
+  public parseEventOld(event: string[]): HydroSensorData {
     if(event.length <= 2) return
     const flag = +event[0]
     if(flag & 128) { // строка с полными данными
-      this.pr = 0
+      this.pressure = 0
       let j = 2
-      if(flag & 1 ) this.pr = +event[j++]
+      if(flag & 1 ) this.pressure = +event[j++]
     }
     else { // строка с разностными данными
       let j = 2
-      if (flag & 1) this.pr += +(event[j++])
+      if (flag & 1) this.pressure += +(event[j++])
     }
     // преобразование к нормальному представлению давления
-    let pr_out = (flag & 2) ? 5.*(this.pr-102.3)/818.4 : this.pr/1000.
+    let p = (flag & 2) ? 5.*(this.pressure-102.3)/818.4 : this.pressure/1000.
     // проверка на корректность данных
-    if(pr_out>=-1 && pr_out<=5) return {flag: 1, pressure: pr_out}
+    if(p>=-1 && p<=5) return {flag: 1, pressure: p}
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,22 +64,22 @@ export default class HydroSensorLogParser {
   // Возвращает структуру {flag, pressure} при успехе
 
 
-  parseEventNew(event) {
+  public parseEventNew(event: string[]): HydroSensorData {
     if(event.length <= 2) return
     const flag = +event[0]
     if(flag & 128) { // строка с полными данными
-      this.pr = 0
+      this.pressure = 0
       let j = 1
-      if(flag & 1 ) this.pr = +event[j++]
+      if(flag & 1 ) this.pressure = +event[j++]
     }
     else { // строка с разностными данными
       let j = 1
-      if (flag & 1) this.pr += +(event[j++])
+      if (flag & 1) this.pressure += +(event[j++])
     }
     // преобразование к нормальному представлению давления
-    let pr_out = (flag & 2) ? 5.*(this.pr-102.3)/818.4 : this.pr/1000.
+    let p = (flag & 2) ? 5.*(this.pressure-102.3)/818.4 : this.pressure/1000.
     // проверка на корректность данных
-    if(pr_out>=-1 && pr_out<=5) return({flag: 1, pressure: pr_out})
+    if(p>=-1 && p<=5) return({flag: 1, pressure: p})
   }
 
 }

@@ -17,11 +17,11 @@ const zones = [
 
 const hostname = window.location.hostname
 console.log(hostname)
-//const logUrl = (hostname=='192.168.2.2' || hostname=='localhost')?'http://192.168.1.1:4480/data/log/':'./log/'
-const logUrl = (hostname=='localhost')?'http://192.168.2.2/log/':'./log/'
+const logUrl = (hostname=='192.168.2.2' || hostname=='localhost')?'http://192.168.1.1:4480/data/log/':'./log/'
+//const logUrl = (hostname=='localhost')?'http://192.168.2.2/log/':'./log/'
 
-//const logThreads = (hostname=='192.168.2.2')?1:8
-const logThreads = (hostname=='192.168.2.2' || hostname=='localhost')?1:8
+const logThreads = (hostname=='192.168.2.2')?1:8
+//const logThreads = (hostname=='192.168.2.2' || hostname=='localhost')?1:8
 
 const arduinoController = new ArduinoController('http://192.168.2.2')
 const logController = new ArduinoLogController(logUrl,()=>{},logThreads)

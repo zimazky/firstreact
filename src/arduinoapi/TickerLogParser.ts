@@ -1,8 +1,13 @@
+type TickerData = {
+  time: number
+  loopcounter: number
+}
+
 export default class TickerLogParser {
-  time = 0
-  loopcounter = 0
+  private time: number = 0
+  private loopcounter: number = 0
   
-  parseEventOld(event) {
+  public parseEventOld(event: string[]):number {
     const flag = +event[0]
     if(flag & 128) { // строка с полными данными
       this.time = parseInt(event[1])
@@ -18,7 +23,7 @@ export default class TickerLogParser {
     return this.time
   }
 
-  parseEventNew(event, isFull) {
+  public parseEventNew(event: string[], isFull: boolean): TickerData {
     if(isFull) { // строка с полными данными
       this.time = parseInt(event[0])
       this.loopcounter = parseInt(event[1])
@@ -35,4 +40,7 @@ export default class TickerLogParser {
     return {time: this.time, loopcounter: this.loopcounter}
   }
 
+  public getLastTime(): number {
+    return this.time
+  }
 }

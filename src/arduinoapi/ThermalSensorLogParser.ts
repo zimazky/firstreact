@@ -1,12 +1,23 @@
+type SensorData = {
+  flag: number
+  value: number
+}
+
+type ThermalSensorData = {
+  temperature?: SensorData
+  humidity?: SensorData
+  power?: SensorData
+}
+
 export default class ThermalSensorLogParser {
 
-  temperature = 0
-  humidity = 0
-  targetTemperature = 0
-  targetTemperatureDelta = 0
-  power = 0
-  sensorState = 0
-  f = 0
+  private temperature = 0
+  private humidity = 0
+  private targetTemperature = 0
+  private targetTemperatureDelta = 0
+  private power = 0
+  private sensorState = 0
+  private f = 0
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // Функция парсинга текстовых данных, полученных от устройства Arduino.
@@ -33,9 +44,9 @@ export default class ThermalSensorLogParser {
   // 6. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
   // 7. Состояние датчика. Тип int, выводится полное значение.
 
-  parseEventOld(event) {
+  public parseEventOld(event: string[]): ThermalSensorData {
    
-    let data = {}
+    let data:ThermalSensorData = {}
     const flag = +event[0]
     if(flag & 128) { // строка с полными данными
       this.temperature = 0; this.humidity = 0; this.targetTemperature = 0; this.targetTemperatureDelta = 0
@@ -101,14 +112,14 @@ export default class ThermalSensorLogParser {
   // 5. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
   // 6. Состояние датчика. Тип int, выводится полное значение.
 
-  parseEventNew(event) {
+  public parseEventNew(event: string[]): [string[], ThermalSensorData] {
    
-    let data = {}
+    let data:ThermalSensorData = {}
     const flag = +event[0]
+    let j = 1;
     if(flag & 128) { // строка с полными данными
       this.temperature = 0; this.humidity = 0; this.targetTemperature = 0; this.targetTemperatureDelta = 0
       this.sensorState = 0
-      let j = 1;
       if(flag & 1) this.temperature = +event[j++]
       if(flag & 2) this.humidity = +event[j++]
       this.power = (flag & 4) ? 1 : 0
@@ -122,7 +133,6 @@ export default class ThermalSensorLogParser {
       }
     }
     else { // строка с разностными данными
-      let j = 1
       if(flag & 1) this.temperature += +event[j++]
       if(flag & 2) this.humidity += +event[j++]
       if(flag & 4) {
@@ -142,6 +152,19 @@ export default class ThermalSensorLogParser {
         if(flag & 2) data.humidity = {flag: this.f, value: this.humidity/10.}
       }
     }
+    return [event.slice(j), data]
+  }
+
+  /**
+   * Возвращает последние данные после чтения лога
+   * @returns 
+   */
+  public getLastData(): ThermalSensorData {
+    let data:ThermalSensorData = {}
+    data.temperature = {flag: this.f, value: this.temperature/10.}
+    data.humidity = {flag: this.f, value: this.humidity/10.}
+    data.power = {flag: 1, value: this.power=1}
     return data
   }
+
 }
