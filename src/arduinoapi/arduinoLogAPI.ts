@@ -16,8 +16,14 @@ function getYYYYMMDD(timestamp, timezone) {
   return y+((m<10)?'0':'')+m+((d<10)?'0':'')+d
 }
 
+enum LoadStatus {
+    OK,
+    Busy,
+    Queued,
+    NotYet
+}
+
 export default class ArduinoLogAPI {
-  static ERRORS = ['OK','Busy','Queued','NotYet']
 
   private threads: number
   private queue: string[]
@@ -32,11 +38,11 @@ export default class ArduinoLogAPI {
 	}
 
 	// Функция загрузки LOG-файла
-	getLogByName(name: string, onLoad = (text:string|void)=>{}, onError = ()=>{}, onFinally = ()=>{}) {
+	getLogByName(name: string, onLoad = (text:string|void)=>{}, onError = ()=>{}, onFinally = ()=>{}): LoadStatus {
   	//ограничиваем одновременную загрузку таймслотов
-    if (this.queue.length>=this.threads) return 1
+    if (this.queue.length>=this.threads) return LoadStatus.Busy
     //не загружать которые в очереди
-		if(this.queue.includes(name)) return 2
+		if(this.queue.includes(name)) return LoadStatus.Queued
     this.queue.push(name)
     //console.log(this.queue)
     //console.log(name)
@@ -56,13 +62,13 @@ export default class ArduinoLogAPI {
 				this.queue = this.queue.filter(s=>s!=name)
         onFinally()
       })
-    return 0
+    return LoadStatus.OK
 	}
 	
   // Функция загрузки LOG-файла по timestamp
 	getLogByTimestamp(type:string, timestamp:number, onLoad = ()=>{}, onError = ()=>{}, onFinally = ()=>{}) {
     //не загружать будущие таймслоты
-		if (timestamp>getBeginDayTimestamp(Date.now()/1000, this.timezone)) return 3
+		if (timestamp>getBeginDayTimestamp(Date.now()/1000, this.timezone)) return LoadStatus.NotYet
     const name = getYYYYMMDD(timestamp, this.timezone)+'.'+type
     return this.getLogByName(name, onLoad, onError, onFinally)
   }
@@ -73,42 +79,42 @@ export default class ArduinoLogAPI {
     if(!textdata) return [tDS, hDS, pDS]
 
     const strings = textdata.split('\n')
-    let T = new TickerLogParser()
-    let Z = new ThermalSensorLogParser()
+    const T = new TickerLogParser()
+    const Z = new ThermalSensorLogParser()
     strings.forEach(string => {
       const event = string.split(';')
       if(event.length <= 2) return
-      let time = T.parseEventOld(event)
+      const time = T.parseEventOld(event)
       if(time == 0) return
-      let data = Z.parseEventOld(event)
+      const data = Z.parseEventOld(event)
       if(data.temperature != undefined) tDS.push({...data.temperature, time})
       if(data.humidity != undefined) hDS.push({...data.humidity, time})
-      if(data.power != undefined) pDS.push({...data.power, time})
+      if(data.power != undefined) pDS.push({flag: 1, value: data.power, time})
     })
     // добавляем завершающие данные (на случай, если не было изменений в конце дня)
-    let data = Z.getLastData()
-    let time = T.getLastTime()
+    const data = Z.getLastData()
+    const time = T.getLastTime()
     if(tDS.data.length != 0) tDS.push({...data.temperature, time})
     if(hDS.data.length != 0) hDS.push({...data.humidity, time})
-    if(pDS.data.length != 0) pDS.push({...data.power, time})
+    if(pDS.data.length != 0) pDS.push({flag: 1, value: data.power, time})
 
     return [tDS, hDS, pDS]
   }
 
-  static parseHydroSensorData = function(textdata, pressureDataset=[]) {
+  static parseHydroSensorData = function(textdata: string, pressureDataset=[]) {
     
     if(!textdata) return pressureDataset
 
     const strings = textdata.split('\n')
-    let T = new TickerLogParser()
-    let H0 = new HydroSensorLogParser()
+    const T = new TickerLogParser()
+    const H0 = new HydroSensorLogParser()
     strings.forEach(string => {
-      let event = string.split(';')
+      const event = string.split(';')
       if(event.length <= 2) return
-      let time = T.parseEventOld(event)
+      const time = T.parseEventOld(event)
       if(time == 0) return
-      let data = H0.parseEventOld(event)
-      if(data) pressureDataset.push({flag: data.flag, time, value: data.pressure})
+      const data = H0.parseEventOld(event)
+      if(data?.flag != undefined) pressureDataset.push({flag: data.flag, time, value: data.pressure})
     })
     return pressureDataset;
   }
