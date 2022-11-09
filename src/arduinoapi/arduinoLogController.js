@@ -22,12 +22,7 @@ class ThermalSensorData {
   
   load(timestamp) {
     this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
-      this.timeslots[timestamp] = ArduinoLogAPI
-			.parseThermalSensorData(text, [
-        new IrregularFloatDataset(timestamp),
-        new IrregularFloatDataset(timestamp),
-        new IrregularFloatDataset(timestamp)
-			])
+      this.timeslots[timestamp] = ArduinoLogAPI.parseThermalSensorData(text, timestamp)
     }, ()=>{
       this.timeslots[timestamp] = []
     }, ()=>{
@@ -44,10 +39,12 @@ class ThermalSensorData {
 
 		for(let t=getBeginDayTimestamp(timeinterval.begin,this.timezone);t<timeinterval.end;t+=86400) {
 			if(typeof(this.timeslots[t]) === 'undefined') this.load(t)
-			else if(this.timeslots[t].length) {
-          a = this.timeslots[t].map((d,i)=>d.fillzdata(timeinterval,tstep,a[i]))
+			else /*if(this.timeslots[t].length)*/ {
+          a[0] = this.timeslots[t]?.temperature.fillzdata(timeinterval,tstep,a[0])
+          a[1] = this.timeslots[t]?.humidity.fillzdata(timeinterval,tstep,a[1])
+          a[2] = this.timeslots[t]?.power.fillzdata(timeinterval,tstep,a[2])
 			}
-		}
+		}      
 		return a
 	}
 }
@@ -65,8 +62,7 @@ class HydroSensorData {
 
   load(timestamp) {
     this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
-      this.timeslots[timestamp] = ArduinoLogAPI
-			.parseHydroSensorData(text, new IrregularFloatDataset(timestamp))
+      this.timeslots[timestamp] = ArduinoLogAPI.parseHydroSensorData(text, timestamp)
     }, ()=>{
       this.timeslots[timestamp] = {flag:0}
     }, ()=>{
@@ -84,13 +80,54 @@ class HydroSensorData {
 		for(let t=getBeginDayTimestamp(timeinterval.begin,this.timezone);t<timeinterval.end;t+=86400) {
 			if(typeof(this.timeslots[t]) === 'undefined') this.load(t)
 			else if(this.timeslots[t].flag != 0) {
-          a = this.timeslots[t].fillzdata(timeinterval,tstep,a)
+          a = this.timeslots[t].pressure.fillzdata(timeinterval,tstep,a)
 			}
 		}
 		return a
 	}
 
 }
+
+
+class LogData {
+  constructor(parent,color) {
+    this.ext = 'L'
+    this.controller = parent.logController
+    this.timezone = parent.timezone
+    this.color = color
+    this.onload = parent.onload
+    this.timeslots = []
+  }
+
+  load(timestamp) {
+    this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
+      this.timeslots[timestamp] = ArduinoLogAPI.parseLogData(text, timestamp)
+    }, ()=>{
+      this.timeslots[timestamp] = {flag:0}
+    }, ()=>{
+      this.onload()
+    })
+	}
+
+  getRegData(timeinterval, tstep) {
+		let a = {zdata:[],min:Number.MAX_VALUE,max:Number.MIN_VALUE}
+		
+		for(let t=timeinterval.begin;t<timeinterval.end;t+=tstep) {
+      a.zdata.push({flag:0})
+		}
+
+		for(let t=getBeginDayTimestamp(timeinterval.begin,this.timezone);t<timeinterval.end;t+=86400) {
+			if(typeof(this.timeslots[t]) === 'undefined') this.load(t)
+			else if(this.timeslots[t].flag != 0) {
+          a = this.timeslots[t].pressure.fillzdata(timeinterval,tstep,a)
+			}
+		}
+		return a
+	}
+
+}
+
+
 
 export default class ArduinoLogController {
   constructor(url, onload=()=>{}, threads=8, timezone=3) {

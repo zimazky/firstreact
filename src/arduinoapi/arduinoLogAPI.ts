@@ -1,20 +1,23 @@
-import ThermalSensorLogParser from './ThermalSensorLogParser'
-import HydroSensorLogParser from './HydroSensorLogParser'
-import TickerLogParser from './TickerLogParser'
+import { ThermoEventParser, ThermoEventData, ThermoDataSet } from './ThermoEventParser'
+import { HydroEventParser, HydroEventData, HydroDataSet } from './HydroEventParser'
+import { TickerEventParser, TickerEventData } from './TickerEventParser'
 import IrregularFloatDataset from '../utils/irregularDS.js'
+import { ILogDataSet, IEventParser } from './ILogController'
+//import DateTime from '../utils/datetime'
 
-
-function getBeginDayTimestamp(timestamp, timezone) {
+function getBeginDayTimestamp(timestamp: number, timezone: number) {
   return (~~((timestamp+timezone*3600)/86400))*86400-timezone*3600
 }
 
-function getYYYYMMDD(timestamp, timezone) {
+function getYYYYMMDD(timestamp: number, timezone: number) {
   const date = new Date((timestamp+timezone*3600)*1000)
   var d = date.getUTCDate()
   var m = date.getUTCMonth()+1
   var y = date.getUTCFullYear()
   return y+((m<10)?'0':'')+m+((d<10)?'0':'')+d
 }
+
+type TLogDataInternal = ThermoEventData | HydroEventData | TickerEventData
 
 enum LoadStatus {
     OK,
@@ -68,113 +71,103 @@ export default class ArduinoLogAPI {
   // Функция загрузки LOG-файла по timestamp
 	getLogByTimestamp(type:string, timestamp:number, onLoad = ()=>{}, onError = ()=>{}, onFinally = ()=>{}) {
     //не загружать будущие таймслоты
-		if (timestamp>getBeginDayTimestamp(Date.now()/1000, this.timezone)) return LoadStatus.NotYet
-    const name = getYYYYMMDD(timestamp, this.timezone)+'.'+type
+		if (timestamp>getBeginDayTimestamp(Date.now()/1000,this.timezone)) return LoadStatus.NotYet
+    const name = getYYYYMMDD(timestamp,this.timezone)+'.'+type
     return this.getLogByName(name, onLoad, onError, onFinally)
   }
 
 
-  static parseThermalSensorData = function(textdata: string, [tDS, hDS, pDS]:IrregularFloatDataset[] ) {
+  static parseThermalSensorData(textdata: string, timestamp: number): ThermoDataSet {
    
-    if(!textdata) return [tDS, hDS, pDS]
-
     const strings = textdata.split('\n')
-    const T = new TickerLogParser()
-    const Z = new ThermalSensorLogParser()
+    const T = new TickerEventParser()
+    const Z = new ThermoEventParser()
+    const dataHolder = Z.createLogDataSet(timestamp)
+    if(!textdata) return dataHolder
+
     strings.forEach(string => {
       const event = string.split(';')
       if(event.length <= 2) return
       const time = T.parseEventOld(event)
       if(time == 0) return
       const data = Z.parseEventOld(event)
-      if(data.temperature != undefined) tDS.push({...data.temperature, time})
-      if(data.humidity != undefined) hDS.push({...data.humidity, time})
-      if(data.power != undefined) pDS.push({flag: 1, value: data.power, time})
+      dataHolder.push(data, time)
     })
     // добавляем завершающие данные (на случай, если не было изменений в конце дня)
     const data = Z.getLastData()
     const time = T.getLastTime()
-    if(tDS.data.length != 0) tDS.push({...data.temperature, time})
-    if(hDS.data.length != 0) hDS.push({...data.humidity, time})
-    if(pDS.data.length != 0) pDS.push({flag: 1, value: data.power, time})
-
-    return [tDS, hDS, pDS]
+    dataHolder.push(data, time)
+    return dataHolder
   }
 
-  static parseHydroSensorData = function(textdata: string, pressureDataset=[]) {
-    
-    if(!textdata) return pressureDataset
+  static parseHydroSensorData(textdata: string, timestamp: number): HydroDataSet {
 
     const strings = textdata.split('\n')
-    const T = new TickerLogParser()
-    const H0 = new HydroSensorLogParser()
+    const T = new TickerEventParser()
+    const H0 = new HydroEventParser()
+    const dataHolder = H0.createLogDataSet(timestamp)
+    if(!textdata) return dataHolder
+
     strings.forEach(string => {
       const event = string.split(';')
       if(event.length <= 2) return
       const time = T.parseEventOld(event)
       if(time == 0) return
       const data = H0.parseEventOld(event)
-      if(data?.flag != undefined) pressureDataset.push({flag: data.flag, time, value: data.pressure})
+      dataHolder.push(data, time)
     })
-    return pressureDataset;
+    return dataHolder;
   }
 
+  static parsers: {[i: string]: IEventParser<TLogDataInternal>} = {
+    'Z2': new ThermoEventParser(),
+    'Z3': new ThermoEventParser(),
+    'H0': new HydroEventParser(),
+    'T': new TickerEventParser()
+  }
+
+  static dataHolders: {[i: string]: ILogDataSet<TLogDataInternal>} = {
+
+  }
   /**
    * Парсинг лога нового формата
    * @param textdata 
-   * @param logController 
+   * @param timestamp 
    * @returns 
    */
-
-  /*
-  static parseLogData = function(textdata: string, logController: any ) {
+  static parseLogData(textdata: string, timestamp: number ) {
    
-    if(!textdata) return
+    let dataHolders: {[i: string]: ILogDataSet<TLogDataInternal>}
+    for(let key in this.parsers) {
+      dataHolders[key] = this.parsers[key].createLogDataSet(timestamp)
+    }
+    if(!textdata) return dataHolders
 
     const strings = textdata.split('\n')
     let isFull = false
-    if(strings[0].startsWith('F')) isFull = true
-
-    let T = new TickerLogParser()
-    let Z1 = new ThermalSensorLogParser()
-    let Z2 = new ThermalSensorLogParser()
-    let Z3 = new ThermalSensorLogParser()
-    let H0 = new HydroSensorLogParser()
     strings.forEach(string => {
+      if(string.startsWith('F')) { isFull = true; return }
+      let events = string.split(';')
+      if(events.length <= 3) return // отбрасываем случайные ошибки
+      let d: {[i: string]: TLogDataInternal}
+      while(events.length > 0) {
+        const [nextevents, data] = this.parsers[events[0]]?.parseEvent(events, isFull) ?? [events.slice(1)]
+        if(data != undefined) d[events[0]] = data
+      }
+      const time = (<TickerEventData> d['T']).time
+      for(let key in this.parsers) {
+        dataHolders[key].push(d[key], time)
+      }
       isFull = false
-      if(string.startsWith('F')) {
-        isFull = true
-        return
-      }
-      const [id, ...row] = string.split(';')
-      switch(id[0]) {
-        case 'Z':
-          const event
-          if(event.length <= 2) return
-          let time = T.parseEventOld(event)
-          if(time == 0) return
-          let data = Z1.parseEventOld(event)
-    
-      }
-
-      if(event.length <= 2) return
-      let time = T.parseEventOld(event)
-      if(time == 0) return
-      let data = Z.parseEventOld(event)
-      if(data.temperature != undefined) tDS.push({...data.temperature, time})
-      if(data.humidity != undefined) hDS.push({...data.humidity, time})
-      if(data.power != undefined) pDS.push({...data.power, time})
     })
     // добавляем завершающие данные (на случай, если не было изменений в конце дня)
-    let data = Z.getLastData()
-    let time = T.getLastTime()
-    if(tDS.data.length != 0) tDS.push({...data.temperature, time})
-    if(hDS.data.length != 0) hDS.push({...data.humidity, time})
-    if(pDS.data.length != 0) pDS.push({...data.power, time})
-
-    return [tDS, hDS, pDS]
+    const time = (<TickerEventData> this.parsers['T'].getLastData()).time
+    for(let key in this.parsers) {
+      dataHolders[key].push(this.parsers[key].getLastData(), time)
+    }
+    return dataHolders
   }
-*/
+
 
 }
 

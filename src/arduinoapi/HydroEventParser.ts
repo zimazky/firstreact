@@ -1,4 +1,7 @@
-type HydroSensorData = {
+import { ILogDataSet, IEventParser } from "./ILogController"
+import IrregularFloatDataset from '../utils/irregularDS.js'
+
+export type HydroEventData = {
   flag?: number
   pressure?: number
   mode?: number
@@ -10,7 +13,23 @@ type HydroSensorData = {
   retryInterval?: number
 }
 
-export default class HydroSensorLogParser {
+export class HydroDataSet implements ILogDataSet<HydroEventData> {
+
+  pressure: IrregularFloatDataset
+  mode: IrregularFloatDataset
+
+  constructor(timestamp: number) {
+    this.pressure = new IrregularFloatDataset(timestamp)
+    this.mode = new IrregularFloatDataset(timestamp)
+  }
+  push(data: HydroEventData, time: number): void {
+    if(data.pressure != undefined) this.pressure.push({flag: data.flag, value: data.pressure, time})
+    if(data.mode != undefined) this.mode.push({flag: 1, value: data.mode, time})
+  }
+}
+
+export class HydroEventParser implements IEventParser<HydroEventData> {
+  private pdata = 0
   private pressure = 0
   private mode = 0
   private hiLimit = 0
@@ -40,14 +59,14 @@ export default class HydroSensorLogParser {
   //
   // Возвращает структуру {flag, pressure} при успехе
 
-  public parseEventOld(event: string[]): HydroSensorData {
-    const data: HydroSensorData = {}
+  public parseEventOld(event: string[]): HydroEventData {
+    const data: HydroEventData = {}
     const flag = +event[0]
     let j = 2
     if(flag & 128) { // строка с полными данными
-      this.pressure = 0
+      this.pdata = 0
     }
-    if(flag & 1 ) this.pressure += +event[j++]
+    if(flag & 1 ) this.pdata += +event[j++]
     if(flag & 4 ) data.mode = this.mode = +event[j++]
     if(flag & 8 ) {
       data.hiLimit = this.hiLimit = +event[j++]
@@ -60,11 +79,11 @@ export default class HydroSensorLogParser {
       data.retryInterval = this.retryInterval = +event[j++]
     }
     // преобразование к нормальному представлению давления
-    let p = (flag & 2) ? 5.*(this.pressure-102.3)/818.4 : this.pressure/1000.
+    let p = (flag & 2) ? 5.*(this.pdata-102.3)/818.4 : this.pdata/1000.
     // проверка на корректность данных
     if(p>=-1 && p<=6) {
       data.flag = flag & 128 ? 0 : 1
-      data.pressure = p
+      data.pressure = this.pressure = p
     }
     return data
   }
@@ -77,7 +96,8 @@ export default class HydroSensorLogParser {
   //   - полная запись (первая запись в файле лога или после перезагрузки);
   //   - разностная запись (записывается разность между текущим значением и предыдущим).
   // Порядок полей при выводе событий:
-  // 1. Флаги событий int8_t ([+] - используются для вывода графиков)
+  // 1. Идентификатор зоны ('H' + номер)
+  // 2. Флаги событий int8_t ([+] - используются для вывода графиков)
   //    1 - Изменение фактического давления
   //    2 - Признак передачи данных без преобразования (0В=0, 5В=1023)
   //    4 - Режим работы и подача мощности на насос;
@@ -85,27 +105,27 @@ export default class HydroSensorLogParser {
   //   16 - Изменились настройки временных параметров (pumpinittime, pumprunlimit, retryinterval)
   //  128 - Признак полной записи (выводятся все поля в виде полного значения)
   // Далее в соответствии с установленными битами флагов событий выводятся параметры:
-  // 2. Фактическое давление. Тип int, выводится разница с предыдущим значением в потоке.
-  // 3. Режим работы и подача мощности. Тип int8_t, выводится значение:
+  // 3. Фактическое давление. Тип int, выводится разница с предыдущим значением в потоке.
+  // 4. Режим работы и подача мощности. Тип int8_t, выводится значение:
   //    0 - выключен, 
   //    1 - включено слежение до запуска насоса, 
   //    2 - включено слежение после запуска насоса, 
   //    4 - сухой ход, 
   //    8 - бит подачи мощности
-  // 4. Заданные значения параметров давления (hilimit; lolimit; drylimit)
-  // 5. Заданные значения временных параметров (pumpinittime; pumprunlimit; retryinterval)
+  // 5. Заданные значения параметров давления (hilimit; lolimit; drylimit)
+  // 6. Заданные значения временных параметров (pumpinittime; pumprunlimit; retryinterval)
   //
   // Возвращает структуру {flag, pressure} при успехе
 
 
-  public parseEventNew(event: string[]): [string[], HydroSensorData] {
-    const data: HydroSensorData = {}
-    const flag = +event[0]
-    let j = 1
+  public parseEvent(event: string[]): [string[], HydroEventData] {
+    const data: HydroEventData = {}
+    const flag = +event[1]
+    let j = 2
     if(flag & 128) { // строка с полными данными
-      this.pressure = 0
+      this.pdata = 0
     }
-    if(flag & 1 ) this.pressure += +event[j++]
+    if(flag & 1 ) this.pdata += +event[j++]
     if(flag & 4 ) data.mode = this.mode = +event[j++]
     if(flag & 8 ) {
       data.hiLimit = this.hiLimit = +event[j++]
@@ -118,13 +138,32 @@ export default class HydroSensorLogParser {
       data.retryInterval = this.retryInterval = +event[j++]
     }
     // преобразование к нормальному представлению давления
-    let p = (flag & 2) ? 5.*(this.pressure-102.3)/818.4 : this.pressure/1000.
+    let p = (flag & 2) ? 5.*(this.pdata-102.3)/818.4 : this.pdata/1000.
     // проверка на корректность данных
     if(p>=-1 && p<=5) {
       data.flag = 1
-      data.pressure = p
+      data.pressure = this.pressure = p
     }
     return [event.slice(j), data]
+  }
+
+  public getLastData(): HydroEventData {
+    const data: HydroEventData = {
+      flag: 1,
+      pressure: this.pressure,
+      mode: this.mode,
+      hiLimit: this.hiLimit,
+      loLimit: this.loLimit,
+      dryLimit: this.dryLimit,
+      pumpInitTime: this.pumpInitTime,
+      pumpRunLimit: this.pumpRunLimit,
+      retryInterval: this.retryInterval
+    }
+    return data
+  }
+
+  public createLogDataSet(timestamp: number): HydroDataSet {
+    return new HydroDataSet(timestamp)
   }
 
 }

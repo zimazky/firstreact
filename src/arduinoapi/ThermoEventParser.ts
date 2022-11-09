@@ -1,9 +1,13 @@
+import {ILogDataSet, IEventParser} from './ILogController'
+import IrregularFloatDataset from '../utils/irregularDS.js'
+
+
 type SensorData = {
   flag: number
   value: number
 }
 
-type ThermalSensorData = {
+export type ThermoEventData = {
   temperature?: SensorData
   humidity?: SensorData
   power?: number
@@ -13,7 +17,25 @@ type ThermalSensorData = {
   sensorState?: number
 }
 
-export default class ThermalSensorLogParser {
+export class ThermoDataSet implements ILogDataSet<ThermoEventData> {
+
+  temperature: IrregularFloatDataset
+  humidity: IrregularFloatDataset
+  power: IrregularFloatDataset
+
+  constructor(timestamp: number) {
+    this.temperature = new IrregularFloatDataset(timestamp)
+    this.humidity = new IrregularFloatDataset(timestamp)
+    this.power = new IrregularFloatDataset(timestamp)
+  }
+  push(data: ThermoEventData, time: number): void {
+    if(data.temperature != undefined) this.temperature.push({...data.temperature, time})
+    if(data.humidity != undefined) this.humidity.push({...data.humidity, time})
+    if(data.power != undefined) this.power.push({flag: 1, value: data.power, time})
+  }
+}
+
+export class ThermoEventParser implements IEventParser<ThermoEventData> {
 
   private temperature = 0
   private humidity = 0
@@ -49,9 +71,9 @@ export default class ThermalSensorLogParser {
   // 6. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
   // 7. Состояние датчика. Тип int, выводится полное значение.
 
-  public parseEventOld(event: string[]): ThermalSensorData {
+  public parseEventOld(event: string[]): ThermoEventData {
    
-    let data: ThermalSensorData = {}
+    let data: ThermoEventData = {}
     const flag = +event[0]
     let j = 2;
     if(flag & 128) { // строка с полными данными
@@ -100,7 +122,8 @@ export default class ThermalSensorLogParser {
   //   - полная запись (первая запись в файле лога или после перезагрузки);
   //   - разностная запись (записывается разность между текущим значением и предыдущим).
   // Порядок полей при выводе событий:
-  // 1. Флаги событий int8_t ([+] - используются для вывода графиков)
+  // 1. Идентификатор зоны ('Z' + номер)
+  // 2. Флаги событий int8_t ([+] - используются для вывода графиков)
   //    1 - Изменение фактической температуры [+]
   //    2 - Изменение фактической влажности [+]
   //    4 - Бит подачи мощности на обогреватель [+]
@@ -110,17 +133,17 @@ export default class ThermalSensorLogParser {
   //   64 - Изменение состояния датчика
   //  128 - Признак полной записи (выводятся все поля в виде полного значения)
   // Далее в соответствии с установленными битами флагов событий выводятся параметры:
-  // 2. Фактическая температура. Тип int, выводится разница с предыдущим значением в потоке.
-  // 3. Фактическая влажность. Тип int, выводится разница с предыдущим значением в потоке.
-  // 4. Заданная температура. Тип int, выводится разница с предыдущим значением в потоке.
-  // 5. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
-  // 6. Состояние датчика. Тип int, выводится полное значение.
+  // 3. Фактическая температура. Тип int, выводится разница с предыдущим значением в потоке.
+  // 4. Фактическая влажность. Тип int, выводится разница с предыдущим значением в потоке.
+  // 5. Заданная температура. Тип int, выводится разница с предыдущим значением в потоке.
+  // 6. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
+  // 7. Состояние датчика. Тип int, выводится полное значение.
 
-  public parseEventNew(event: string[]): [string[], ThermalSensorData] {
+  public parseEvent(event: string[]): [string[], ThermoEventData] {
    
-    let data: ThermalSensorData = {}
-    const flag = +event[0]
-    let j = 1;
+    let data: ThermoEventData = {}
+    const flag = +event[1]
+    let j = 2;
     if(flag & 128) { // строка с полными данными
       this.temperature = 0
       this.humidity = 0
@@ -159,12 +182,8 @@ export default class ThermalSensorLogParser {
     return [event.slice(j), data]
   }
 
-  /**
-   * Возвращает последние данные после чтения лога
-   * @returns 
-   */
-  public getLastData(): ThermalSensorData {
-    let data: ThermalSensorData = {}
+  public getLastData(): ThermoEventData {
+    let data: ThermoEventData = {}
     const f = this.sensorState == 0 ? 1 : 0
     data.temperature = {flag: f, value: this.temperature/10.}
     data.humidity = {flag: f, value: this.humidity/10.}
@@ -174,6 +193,10 @@ export default class ThermalSensorLogParser {
     data.targetTemperatureDelta = this.targetTemperatureDelta
     data.sensorState = this.sensorState
     return data
+  }
+
+  public createLogDataSet(timestamp: number): ThermoDataSet {
+    return new ThermoDataSet(timestamp)
   }
 
 }
