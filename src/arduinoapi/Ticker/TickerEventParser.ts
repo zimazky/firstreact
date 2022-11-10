@@ -1,5 +1,5 @@
-import { ILogDataSet, IEventParser } from "./ILogController"
-import IrregularFloatDataset from '../utils/IrregularDS'
+import { ILogDataSet, IEventParser } from "../ILogController"
+import IrregularDataset from '../../utils/IrregularDS'
 
 export type TickerEventData = {
   time: number
@@ -8,10 +8,10 @@ export type TickerEventData = {
 
 export class TickerDataSet implements ILogDataSet<TickerEventData> {
 
-  loopcounter: IrregularFloatDataset
+  loopcounter: IrregularDataset
 
   constructor(timestamp: number) {
-    this.loopcounter = new IrregularFloatDataset(timestamp)
+    this.loopcounter = new IrregularDataset(timestamp)
   }
   push(data: TickerEventData, time: number): void {
     if(data.loopcounter != undefined) this.loopcounter.push({flag: 1, value: data.loopcounter, time})

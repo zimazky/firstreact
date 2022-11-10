@@ -1,5 +1,5 @@
-import { ILogDataSet, IEventParser } from "./ILogController"
-import IrregularFloatDataset from '../utils/IrregularDS'
+import { ILogDataSet, IEventParser } from "../ILogController"
+import IrregularDataset from '../../utils/IrregularDS'
 
 export type HydroEventData = {
   flag?: number
@@ -15,12 +15,12 @@ export type HydroEventData = {
 
 export class HydroDataSet implements ILogDataSet<HydroEventData> {
 
-  pressure: IrregularFloatDataset
-  mode: IrregularFloatDataset
+  pressure: IrregularDataset
+  mode: IrregularDataset
 
   constructor(timestamp: number) {
-    this.pressure = new IrregularFloatDataset(timestamp)
-    this.mode = new IrregularFloatDataset(timestamp)
+    this.pressure = new IrregularDataset(timestamp)
+    this.mode = new IrregularDataset(timestamp)
   }
   push(data: HydroEventData, time: number): void {
     if(data.pressure != undefined) this.pressure.push({flag: data.flag, value: data.pressure, time})

@@ -1,5 +1,5 @@
-import {ILogDataSet, IEventParser} from './ILogController'
-import IrregularFloatDataset from '../utils/IrregularDS'
+import {ILogDataSet, IEventParser} from '../ILogController'
+import IrregularDataset from '../../utils/IrregularDS'
 
 
 type SensorData = {
@@ -19,14 +19,14 @@ export type ThermoEventData = {
 
 export class ThermoDataSet implements ILogDataSet<ThermoEventData> {
 
-  temperature: IrregularFloatDataset
-  humidity: IrregularFloatDataset
-  power: IrregularFloatDataset
+  temperature: IrregularDataset
+  humidity: IrregularDataset
+  power: IrregularDataset
 
   constructor(timestamp: number) {
-    this.temperature = new IrregularFloatDataset(timestamp)
-    this.humidity = new IrregularFloatDataset(timestamp)
-    this.power = new IrregularFloatDataset(timestamp)
+    this.temperature = new IrregularDataset(timestamp)
+    this.humidity = new IrregularDataset(timestamp)
+    this.power = new IrregularDataset(timestamp)
   }
   push(data: ThermoEventData, time: number): void {
     if(data.temperature != undefined) this.temperature.push({...data.temperature, time})

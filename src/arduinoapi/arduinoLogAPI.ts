@@ -1,7 +1,6 @@
-import { ThermoEventParser, ThermoEventData, ThermoDataSet } from './ThermoEventParser'
-import { HydroEventParser, HydroEventData, HydroDataSet } from './HydroEventParser'
-import { TickerEventParser, TickerEventData } from './TickerEventParser'
-import IrregularFloatDataset from '../utils/IrregularDS.js'
+import { ThermoEventParser, ThermoEventData, ThermoDataSet } from './ThermoController/ThermoEventParser'
+import { HydroEventParser, HydroEventData, HydroDataSet } from './HydroSystemController/HydroEventParser'
+import { TickerEventParser, TickerEventData } from './Ticker/TickerEventParser'
 import { ILogDataSet, IEventParser } from './ILogController'
 //import DateTime from '../utils/datetime'
 
