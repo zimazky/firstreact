@@ -41,9 +41,11 @@ export type TimeInterval = {
   end: number
 }
 
-export interface ILogController<TOut> {
+export interface ILogController<T> {
   id: string
-  getRegData(timeinterval: TimeInterval, tstep: number): TOut
+  createEventParser(): IEventParser<T>
+  addLogDataSet(timestamp: number, d: ILogDataSet<T>): void
+  //getRegData(timeinterval: TimeInterval, tstep: number): TOut
 }
 
 export interface ILoadController {

@@ -1,7 +1,7 @@
 import { ThermoEventParser, ThermoEventData, ThermoDataSet } from './ThermoEventParser'
 import { HydroEventParser, HydroEventData, HydroDataSet } from './HydroEventParser'
 import { TickerEventParser, TickerEventData } from './TickerEventParser'
-import IrregularFloatDataset from '../utils/irregularDS.js'
+import IrregularFloatDataset from '../utils/IrregularDS.js'
 import { ILogDataSet, IEventParser } from './ILogController'
 //import DateTime from '../utils/datetime'
 
@@ -51,13 +51,9 @@ export default class ArduinoLogAPI {
     //console.log(name)
     fetch(this.url+name)
       .then(r=>r.text())
-      .catch(error=>{
-        console.log('loading error ' + name)
-        console.log(error)
-      })
       .then(text=>onLoad(text))
       .catch((error)=>{
-        console.log('parsing error ' + name)
+        console.log('loading error ' + name)
         console.log(error)
         onError()
       })
@@ -69,7 +65,7 @@ export default class ArduinoLogAPI {
 	}
 	
   // Функция загрузки LOG-файла по timestamp
-	getLogByTimestamp(type:string, timestamp:number, onLoad = ()=>{}, onError = ()=>{}, onFinally = ()=>{}) {
+	getLogByTimestamp(type:string, timestamp:number, onLoad = (t?:string)=>{}, onError = ()=>{}, onFinally = ()=>{}) {
     //не загружать будущие таймслоты
 		if (timestamp>getBeginDayTimestamp(Date.now()/1000,this.timezone)) return LoadStatus.NotYet
     const name = getYYYYMMDD(timestamp,this.timezone)+'.'+type

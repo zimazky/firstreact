@@ -1,6 +1,7 @@
 import DateTime from "src/utils/datetime"
+import { ZDataSet } from "src/utils/IrregularDS"
 import { ILoadController, ILogController, TimeInterval } from "./ILogController"
-import { ThermoDataSet, ThermoEventParser } from "./ThermoEventParser"
+import { ThermoDataSet, ThermoEventData, ThermoEventParser } from "./ThermoEventParser"
 import { TickerEventParser } from "./TickerEventParser"
 
 export type TViewData = {
@@ -8,17 +9,10 @@ export type TViewData = {
   value?: number
 }
 
-export type TViewDataSet = {
-  //flag: number
-  min: number
-  max: number
-  zdata: TViewData[]
-}
-
 export type TThermoViewDataSet = {
-  t: TViewDataSet
-  h: TViewDataSet
-  p: TViewDataSet
+  t: ZDataSet
+  h: ZDataSet
+  p: ZDataSet
 }
 
 export type TThermoColors = {
@@ -51,7 +45,7 @@ function parseThermoLogData(textdata: string, timestamp: number): ThermoDataSet 
 }
 
 
-export class ThermoLogController implements ILogController<TThermoViewDataSet> {
+export class ThermoLogController implements ILogController<ThermoEventData> {
 
   public id: string
   
@@ -77,25 +71,34 @@ export class ThermoLogController implements ILogController<TThermoViewDataSet> {
     })
 	}
 */
+
+  createEventParser() {
+    return new ThermoEventParser()
+  }
+
+  addLogDataSet(timestamp: number, d: ThermoDataSet) {
+    this.datasets[timestamp] = d
+  }
+
   getRegData(timeinterval: TimeInterval, tstep: number) {
 		let a: TThermoViewDataSet = {
-      t: {zdata:[], min:Number.MAX_VALUE, max:-Number.MAX_VALUE},
-      h: {zdata:[], min:Number.MAX_VALUE, max:-Number.MAX_VALUE},
-      p: {zdata:[], min:Number.MAX_VALUE, max:-Number.MAX_VALUE}
+      t: {zdata: [], min: Number.MAX_VALUE, max: -Number.MAX_VALUE},
+      h: {zdata: [], min: Number.MAX_VALUE, max: -Number.MAX_VALUE},
+      p: {zdata: [], min: Number.MAX_VALUE, max: -Number.MAX_VALUE}
     }
 		
 		for(let t=timeinterval.begin;t<timeinterval.end;t+=tstep) {
-      a.t.zdata.push({flag:0})
-      a.h.zdata.push({flag:0})
-      a.p.zdata.push({flag:0})
+      a.t.zdata.push({flag: 0, value: 0})
+      a.h.zdata.push({flag: 0, value: 0})
+      a.p.zdata.push({flag: 0, value: 0})
 		}
 
 		for(let t=DateTime.getBeginDayTimestamp(timeinterval.begin);t<timeinterval.end;t+=86400) {
 			if(typeof(this.datasets[t]) === 'undefined') {}//this.load(t)
 			else /*if(this.timeslots[t].length)*/ {
-          a.t = this.datasets[t]?.temperature.fillzdata(timeinterval,tstep,a.t)
-          a.p = this.datasets[t]?.humidity.fillzdata(timeinterval,tstep,a.p)
-          a.h = this.datasets[t]?.power.fillzdata(timeinterval,tstep,a.h)
+          a.t = this.datasets[t]?.temperature.fillzdata(timeinterval, tstep, a.t)
+          a.p = this.datasets[t]?.humidity.fillzdata(timeinterval, tstep, a.p)
+          a.h = this.datasets[t]?.power.fillzdata(timeinterval, tstep, a.h)
 			}
 		}      
 		return a

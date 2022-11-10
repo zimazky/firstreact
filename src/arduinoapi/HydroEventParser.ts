@@ -1,5 +1,5 @@
 import { ILogDataSet, IEventParser } from "./ILogController"
-import IrregularFloatDataset from '../utils/irregularDS.js'
+import IrregularFloatDataset from '../utils/IrregularDS'
 
 export type HydroEventData = {
   flag?: number

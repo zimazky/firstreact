@@ -1,5 +1,5 @@
 import ArduinoController from '../arduinoapi/arduinoAPI.js'
-import ArduinoLogController from '../arduinoapi/arduinoLogController.js'
+import ArduinoLogController from '../arduinoapi/arduinoLogController'
 import Header from './Header.jsx'
 import TemperatureControl from './TemperatureControl.jsx'
 import TimeDiagramsSet from './TimeDiagramsSet.jsx'
