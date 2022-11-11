@@ -1,7 +1,8 @@
+import ArduinoLogLoader from "../arduinoLogLoader"
 import ArduinoLogAPI from "../arduinoLogAPI"
-import ArduinoLogController from "../arduinoLogController"
-import { HydroDataSet } from "./HydroEventParser"
+import { HydroDataSet, HydroEventParser } from "./HydroEventParser"
 import { TimeInterval } from "../ILogController"
+import { TickerEventParser } from "../Ticker/TickerEventParser"
 
 function getBeginDayTimestamp(timestamp, timezone) {
   return (~~((timestamp+timezone*3600)/86400))*86400-timezone*3600
@@ -10,7 +11,7 @@ function getBeginDayTimestamp(timestamp, timezone) {
 export class HydroSensorData {
   id: number
   ext: string
-  controller: ArduinoLogAPI
+  controller: ArduinoLogLoader
   timezone: number
   onload: (t?: string)=>void
   color: string
@@ -18,10 +19,10 @@ export class HydroSensorData {
   timeslots: HydroDataSet[]
 
 
-  constructor(id: number, parent: ArduinoLogController, color: string) {
+  constructor(id: number, parent: ArduinoLogAPI, color: string) {
     this.id = id
     this.ext = 'H'+id
-    this.controller = parent.logController
+    this.controller = parent.logLoader
     this.timezone = parent.timezone
     this.color = color
     this.onload = parent.onload
@@ -30,7 +31,7 @@ export class HydroSensorData {
 
   load(timestamp: number) {
     this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
-      this.timeslots[timestamp] = ArduinoLogAPI.parseHydroSensorData(text, timestamp)
+      this.timeslots[timestamp] = parseHydroLogData(text, timestamp)
     }, ()=>{
       this.timeslots[timestamp] = new HydroDataSet(timestamp)
     }, ()=>{
@@ -53,4 +54,23 @@ export class HydroSensorData {
 		}
 		return a
 	}
+}
+
+function parseHydroLogData(textdata: string, timestamp: number): HydroDataSet {
+
+  const strings = textdata.split('\n')
+  const T = new TickerEventParser()
+  const H0 = new HydroEventParser()
+  const dataHolder = H0.createLogDataSet(timestamp)
+  if(!textdata) return dataHolder
+
+  strings.forEach(string => {
+    const event = string.split(';')
+    if(event.length <= 2) return
+    const time = T.parseEventOld(event)
+    if(time == 0) return
+    const data = H0.parseEventOld(event)
+    dataHolder.push(data, time)
+  })
+  return dataHolder;
 }

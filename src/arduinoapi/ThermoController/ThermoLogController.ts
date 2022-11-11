@@ -1,7 +1,8 @@
+import ArduinoLogLoader from "../arduinoLogLoader"
 import ArduinoLogAPI from "../arduinoLogAPI"
-import ArduinoLogController from "../arduinoLogController"
 import { TimeInterval } from "../ILogController"
-import { ThermoDataSet } from "./ThermoEventParser"
+import { TickerEventParser } from "../Ticker/TickerEventParser"
+import { ThermoDataSet, ThermoEventParser } from "./ThermoEventParser"
 
 function getBeginDayTimestamp(timestamp, timezone) {
   return (~~((timestamp+timezone*3600)/86400))*86400-timezone*3600
@@ -10,7 +11,7 @@ function getBeginDayTimestamp(timestamp, timezone) {
 export class ThermalSensorData {
   id: number
   ext: string
-  controller: ArduinoLogAPI
+  controller: ArduinoLogLoader
   timezone: number
   onload: (t?: string)=>void
   colors: {t:string, h: string, p: string}
@@ -19,10 +20,10 @@ export class ThermalSensorData {
   
   static DATASET_NAMES = ['Temperature', 'Humidity', 'Power']
 
-  constructor(id: number, parent: ArduinoLogController, [tcolor,hcolor,pcolor]) {
+  constructor(id: number, parent: ArduinoLogAPI, [tcolor,hcolor,pcolor]) {
     this.id = id
     this.ext = 'Z'+id
-    this.controller = parent.logController
+    this.controller = parent.logLoader
     this.timezone = parent.timezone
     this.onload = parent.onload
     this.colors = {t:tcolor,h:hcolor,p:pcolor}
@@ -32,7 +33,7 @@ export class ThermalSensorData {
   
   load(timestamp: number) {
     this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
-      this.timeslots[timestamp] = ArduinoLogAPI.parseThermalSensorData(text, timestamp)
+      this.timeslots[timestamp] = parseThermoLogData(text, timestamp)
     }, ()=>{
       this.timeslots[timestamp] = new ThermoDataSet(timestamp)
     }, ()=>{
@@ -57,4 +58,27 @@ export class ThermalSensorData {
 		}      
 		return a
 	}
+}
+
+function parseThermoLogData(textdata: string, timestamp: number): ThermoDataSet {
+   
+  const strings = textdata.split('\n')
+  const T = new TickerEventParser()
+  const Z = new ThermoEventParser()
+  const dataHolder = Z.createLogDataSet(timestamp)
+  if(!textdata) return dataHolder
+
+  strings.forEach(string => {
+    const event = string.split(';')
+    if(event.length <= 2) return
+    const time = T.parseEventOld(event)
+    if(time == 0) return
+    const data = Z.parseEventOld(event)
+    dataHolder.push(data, time)
+  })
+  // добавляем завершающие данные (на случай, если не было изменений в конце дня)
+  const data = Z.getLastData()
+  const time = T.getLastTime()
+  dataHolder.push(data, time)
+  return dataHolder
 }
