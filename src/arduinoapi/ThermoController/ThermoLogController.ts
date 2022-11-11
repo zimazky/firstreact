@@ -1,14 +1,14 @@
 import ArduinoLogLoader from "../arduinoLogLoader"
 import ArduinoLogAPI from "../arduinoLogAPI"
-import { TimeInterval } from "../ILogController"
+import { ILogController, TimeInterval } from "../ILogController"
 import { TickerEventParser } from "../Ticker/TickerEventParser"
-import { ThermoDataSet, ThermoEventParser } from "./ThermoEventParser"
+import { ThermoDataSet, ThermoEventData, ThermoEventParser } from "./ThermoEventParser"
 
 function getBeginDayTimestamp(timestamp, timezone) {
   return (~~((timestamp+timezone*3600)/86400))*86400-timezone*3600
 }
 
-export class ThermalSensorData {
+export class ThermalSensorData implements ILogController<ThermoEventData> {
   id: number
   ext: string
   controller: ArduinoLogLoader
@@ -17,10 +17,11 @@ export class ThermalSensorData {
   colors: {t:string, h: string, p: string}
   isShowPower: boolean
   timeslots: ThermoDataSet[]
+  begin: number
   
   static DATASET_NAMES = ['Temperature', 'Humidity', 'Power']
 
-  constructor(id: number, parent: ArduinoLogAPI, [tcolor,hcolor,pcolor]) {
+  constructor(id: number, parent: ArduinoLogAPI, [tcolor,hcolor,pcolor], begin: number) {
     this.id = id
     this.ext = 'Z'+id
     this.controller = parent.logLoader
@@ -29,19 +30,40 @@ export class ThermalSensorData {
     this.colors = {t:tcolor,h:hcolor,p:pcolor}
     this.isShowPower = false
     this.timeslots = []
+    this.begin = begin
   }
   
+  createEventParser(): ThermoEventParser {
+    return new ThermoEventParser()
+  }
+
+  getDataSet(timestamp: number): ThermoDataSet {
+    if(this.timeslots[timestamp] === undefined) this.timeslots[timestamp] = new ThermoDataSet(timestamp)
+    return this.timeslots[timestamp]
+  }
+
+  createDataSet(timestamp: number): ThermoDataSet {
+    if(this.timeslots[timestamp] !== undefined) return null
+    this.timeslots[timestamp] = new ThermoDataSet(timestamp)
+    return this.timeslots[timestamp]
+  }
+
+  getParser(timestamp: number) {
+    return { name: this.ext, parser: this.createEventParser(), dataset: this.getDataSet(timestamp) } 
+  }
+
+
   load(timestamp: number) {
     this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
-      this.timeslots[timestamp] = parseThermoLogData(text, timestamp)
+      this.parseThermoLogData(text, timestamp)
     }, ()=>{
-      this.timeslots[timestamp] = new ThermoDataSet(timestamp)
+      if(this.timeslots[timestamp] === undefined) this.timeslots[timestamp] = new ThermoDataSet(timestamp)
     }, ()=>{
       this.onload()
     })
 	}
 
-  getRegData(timeinterval: TimeInterval, tstep: number) {
+  getRegData(timeinterval: TimeInterval, tstep: number, load: (t:number)=>void) {
 		let a = ThermalSensorData.DATASET_NAMES.map(()=>({zdata:[],min:Number.MAX_VALUE,max:Number.MIN_VALUE}))
 		
 		for(let t=timeinterval.begin;t<timeinterval.end;t+=tstep) {
@@ -49,7 +71,8 @@ export class ThermalSensorData {
 		}
 
 		for(let t=getBeginDayTimestamp(timeinterval.begin, this.timezone); t<timeinterval.end; t+=86400) {
-			if(typeof(this.timeslots[t]) === 'undefined') this.load(t)
+      if(t<this.begin) continue
+			if(typeof(this.timeslots[t]) === 'undefined') load(t)
 			else /*if(this.timeslots[t].length)*/ {
           a[0] = this.timeslots[t]?.temperature?.fillzdata(timeinterval,tstep,a[0])
           a[1] = this.timeslots[t]?.humidity?.fillzdata(timeinterval,tstep,a[1])
@@ -58,27 +81,28 @@ export class ThermalSensorData {
 		}      
 		return a
 	}
-}
 
-function parseThermoLogData(textdata: string, timestamp: number): ThermoDataSet {
+  parseThermoLogData(textdata: string, timestamp: number) {
    
-  const strings = textdata.split('\n')
-  const T = new TickerEventParser()
-  const Z = new ThermoEventParser()
-  const dataHolder = Z.createLogDataSet(timestamp)
-  if(!textdata) return dataHolder
-
-  strings.forEach(string => {
-    const event = string.split(';')
-    if(event.length <= 2) return
-    const time = T.parseEventOld(event)
-    if(time == 0) return
-    const data = Z.parseEventOld(event)
-    dataHolder.push(data, time)
-  })
-  // добавляем завершающие данные (на случай, если не было изменений в конце дня)
-  const data = Z.getLastData()
-  const time = T.getLastTime()
-  dataHolder.push(data, time)
-  return dataHolder
+    const strings = textdata.split('\n')
+    const T = new TickerEventParser()
+    const Z = new ThermoEventParser()
+    const dataset = this.createDataSet(timestamp)
+    if(dataset === null) return
+    if(!textdata) return
+  
+    strings.forEach(string => {
+      const event = string.split(';')
+      if(event.length <= 2) return
+      const time = T.parseEventOld(event)
+      if(time == 0) return
+      const data = Z.parseEventOld(event)
+      dataset.push(data, time)
+    })
+    // добавляем завершающие данные (на случай, если не было изменений в конце дня)
+    const data = Z.getLastData()
+    const time = T.getLastTime()
+    dataset.push(data, time)
+  }
 }
+

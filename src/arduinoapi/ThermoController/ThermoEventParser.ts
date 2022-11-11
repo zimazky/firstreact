@@ -139,7 +139,7 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
   // 6. Заданный гистерезис температуры. Тип int, выводится разница с предыдущим значением в потоке.
   // 7. Состояние датчика. Тип int, выводится полное значение.
 
-  public parseEvent(event: string[]): [string[], ThermoEventData] {
+  public parseEvent(event: string[], isFull: boolean): [string[], ThermoEventData] {
    
     let data: ThermoEventData = {}
     const flag = +event[1]

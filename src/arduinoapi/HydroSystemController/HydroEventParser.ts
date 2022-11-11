@@ -118,7 +118,7 @@ export class HydroEventParser implements IEventParser<HydroEventData> {
   // Возвращает структуру {flag, pressure} при успехе
 
 
-  public parseEvent(event: string[]): [string[], HydroEventData] {
+  public parseEvent(event: string[], isFull: boolean): [string[], HydroEventData] {
     const data: HydroEventData = {}
     const flag = +event[1]
     let j = 2

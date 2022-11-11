@@ -18,9 +18,9 @@ export default function TimeDiagramsSet(props) {
 	},[props.timeInterval.end])
   React.useEffect(()=>{
     logController.setOnLoad( ()=>setTimeInterval( ti=>({...ti}) ))
-		logController.addThermalSensor(2,['white','white','red'])
-		logController.addThermalSensor(3,['white','white','red'])
-		logController.addHydroSensor(0,['white','white','red'])
+		logController.addThermalSensor(2,['white','white','red'],new Date('2016.04.29')/1000)
+		logController.addThermalSensor(3,['white','white','red'],new Date('2018.09.14')/1000)
+		logController.addHydroSensor(0,['white','white','red'],new Date('2021.07.25')/1000)
   },[])	
 
   React.useEffect(()=>{

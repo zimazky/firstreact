@@ -41,13 +41,13 @@ export class TickerEventParser implements IEventParser<TickerEventData>{
       this.time = 0
       this.loopcounter = 0
     }
-    let ptime = +event[0]
+    let ptime = +event[1]
     // исправление ошибки в логах, отрицательная корректировка времени выводится как положительное число
     ptime = ptime > 2147483647 ? ptime-4294967296 : ptime
     if(ptime<0) console.log(ptime, this.time)
     this.time += ptime
-    this.loopcounter += +event[1]
-    return [event.slice(2), {time: this.time, loopcounter: this.loopcounter}]
+    this.loopcounter += +event[2]
+    return [event.slice(3), {time: this.time, loopcounter: this.loopcounter}]
   }
 
   public getLastData(): TickerEventData {

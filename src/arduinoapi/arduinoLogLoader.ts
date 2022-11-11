@@ -1,7 +1,3 @@
-import { ThermoEventParser, ThermoEventData } from './ThermoController/ThermoEventParser'
-import { HydroEventParser, HydroEventData } from './HydroSystemController/HydroEventParser'
-import { TickerEventParser, TickerEventData } from './Ticker/TickerEventParser'
-import { ILogDataSet, IEventParser } from './ILogController'
 //import DateTime from '../utils/datetime'
 
 function getBeginDayTimestamp(timestamp: number, timezone: number) {
@@ -16,13 +12,17 @@ function getYYYYMMDD(timestamp: number, timezone: number) {
   return y+((m<10)?'0':'')+m+((d<10)?'0':'')+d
 }
 
+/** Тип записи очереди загрузки */
 type TQueue = {
+  /** Имя файла */
   name: string
+  /** Обработчик данных после загрузки */
   onLoad: (t:string)=>void
+  /** Обработчик при ошибке */
   onError: ()=>void
+  /** Заключительный обработчик при любом исходе загрузки файла */
+  onFinally: ()=>void
 }
-
-type TLogDataInternal = ThermoEventData | HydroEventData | TickerEventData
 
 enum LoadStatus {
     OK,
@@ -33,42 +33,52 @@ enum LoadStatus {
 
 export default class ArduinoLogLoader {
 
-  private threads: number
-  private queue: string[]
+  private threadsLimit: number
+  private queue: TQueue[] = []
   private url: string
+  private inProcess: string[] = []
   private timezone: number
 
-  constructor(url: string, threads = 8, timezone = 3) {
-    this.threads = threads
+  constructor(url: string, threadsLimit = 8, timezone = 3) {
+    this.threadsLimit = threadsLimit
     this.queue = []
 		this.url = url
     this.timezone = timezone
 	}
 
-	// Функция загрузки LOG-файла
-	getLogByName(name: string, onLoad = (t?:string)=>{}, onError = ()=>{}, onFinally = ()=>{}): LoadStatus {
-  	//ограничиваем одновременную загрузку таймслотов
-    if (this.queue.length>=this.threads) return LoadStatus.Busy
-    //не загружать которые в очереди
-		if(this.queue.includes(name)) return LoadStatus.Queued
-    this.queue.push(name)
-    //console.log(this.queue)
-    console.log(`loading ${name}`)
-    fetch(this.url+name)
+  /** Загрузка и обработка следующего файла из очереди */
+  loadNext() {
+    const q = this.queue.shift()
+    if(q == undefined) return
+    //console.log(q.name, this.queue.length, this.inProcess.length)
+    this.inProcess.push(q.name)
+    fetch(this.url + q.name)
     .then(r=>{
       if(r.ok) return r.text()
       // Исключение сработает только если не сетевая ошибка
       throw Error(`status=${r.status}`)
     })
-    .then(t=>onLoad(t))
+    .then(t=>q.onLoad(t))
     .catch(e=>{
-      console.log(`loading error ${name}: ${e.message}`)
-      onError()
+      console.log(`loading error ${q.name}: ${e.message}`)
+      q.onError()
     })
     .finally(()=>{
-      this.queue = this.queue.filter(s=>s!=name)
-      onFinally()
+      this.inProcess = this.inProcess.filter(s=>s!=q.name)
+      q.onFinally()
+      this.loadNext()
     })
+  }
+
+	// Функция загрузки LOG-файла
+	getLogByName(name: string, onLoad = (t?:string)=>{}, onError = ()=>{}, onFinally = ()=>{}): LoadStatus {
+    //уже есть в очереди
+    if (this.queue.some(q => q.name == name) || this.inProcess.includes(name)) return LoadStatus.Queued
+    this.queue.push({name, onLoad, onError, onFinally})
+    //ограничиваем одновременную загрузку
+    while(this.queue.length>0 && this.inProcess.length<this.threadsLimit) {
+      this.loadNext()
+    }
     return LoadStatus.OK
 	}
 	
@@ -79,68 +89,6 @@ export default class ArduinoLogLoader {
     const name = getYYYYMMDD(timestamp,this.timezone)+'.'+type
     return this.getLogByName(name, onLoad, onError, onFinally)
   }
-
-  loadLogsByTimestamp(exts:string[], timestamp:number, onLoad = (t?:string)=>{}, onError = ()=>{}, onFinally = ()=>{}) {
-    //не загружать будущие таймслоты
-		if (timestamp>getBeginDayTimestamp(Date.now()/1000,this.timezone)) return LoadStatus.NotYet
-    const ymd = getYYYYMMDD(timestamp,this.timezone)
-    const names = exts.map(t=>ymd+'.'+t)
-    this.getLogByName(ymd+'.L', onLoad, ()=>{
-      names.forEach(n=>this.getLogByName(n, onLoad, onError, onFinally))
-      onError()
-    }, onFinally)
-  }
-
-  static parsers: {[i: string]: IEventParser<TLogDataInternal>} = {
-    'Z2': new ThermoEventParser(),
-    'Z3': new ThermoEventParser(),
-    'H0': new HydroEventParser(),
-    'T': new TickerEventParser()
-  }
-
-  static dataHolders: {[i: string]: ILogDataSet<TLogDataInternal>} = {
-
-  }
-  /**
-   * Парсинг лога нового формата
-   * @param textdata 
-   * @param timestamp 
-   * @returns 
-   */
-  static parseLogData(textdata: string, timestamp: number ) {
-   
-    let dataHolders: {[i: string]: ILogDataSet<TLogDataInternal>}
-    for(let key in this.parsers) {
-      dataHolders[key] = this.parsers[key].createLogDataSet(timestamp)
-    }
-    if(!textdata) return dataHolders
-
-    const strings = textdata.split('\n')
-    let isFull = false
-    strings.forEach(string => {
-      if(string.startsWith('F')) { isFull = true; return }
-      let events = string.split(';')
-      if(events.length <= 3) return // отбрасываем случайные ошибки
-      let d: {[i: string]: TLogDataInternal}
-      while(events.length > 0) {
-        const [nextevents, data] = this.parsers[events[0]]?.parseEvent(events, isFull) ?? [events.slice(1)]
-        if(data != undefined) d[events[0]] = data
-      }
-      const time = (<TickerEventData> d['T']).time
-      for(let key in this.parsers) {
-        dataHolders[key].push(d[key], time)
-      }
-      isFull = false
-    })
-    // добавляем завершающие данные (на случай, если не было изменений в конце дня)
-    const time = (<TickerEventData> this.parsers['T'].getLastData()).time
-    for(let key in this.parsers) {
-      dataHolders[key].push(this.parsers[key].getLastData(), time)
-    }
-    return dataHolders
-  }
-
-
 }
 
 
