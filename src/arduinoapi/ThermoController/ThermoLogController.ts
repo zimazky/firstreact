@@ -1,20 +1,15 @@
-import ArduinoLogLoader from "../arduinoLogLoader"
+import LogLoader from "../LogLoader"
 import ArduinoLogAPI from "../arduinoLogAPI"
 import { ILogController, TimeInterval } from "../ILogController"
 import { TickerEventParser } from "../LLogController/TickerEventParser"
 import { ThermoDataSet, ThermoEventData, ThermoEventParser } from "./ThermoEventParser"
-
-function getBeginDayTimestamp(timestamp, timezone) {
-  return (~~((timestamp+timezone*3600)/86400))*86400-timezone*3600
-}
+import DateTime from "../../utils/datetime"
 
 export class ThermalSensorData implements ILogController<ThermoEventData> {
   id: number
   ext: string
-  controller: ArduinoLogLoader
-  timezone: number
-  onload: (t?: string)=>void
-  colors: {t:string, h: string, p: string}
+  logLoader: LogLoader
+  colors: {t: string, h: string, p: string}
   isShowPower: boolean
   timeslots: ThermoDataSet[]
   begin: number
@@ -25,8 +20,7 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
   constructor(id: number, parent: ArduinoLogAPI, [tcolor,hcolor,pcolor], begin: number, end: number) {
     this.id = id
     this.ext = 'Z'+id
-    this.controller = parent.logLoader
-    this.timezone = parent.timezone
+    this.logLoader = parent.logLoader
     this.colors = {t:tcolor,h:hcolor,p:pcolor}
     this.isShowPower = false
     this.timeslots = []
@@ -53,10 +47,9 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
     return { name: this.ext, parser: this.createEventParser(), dataset: this.getDataSet(timestamp) } 
   }
 
-
   load(timestamp: number) {
     if(timestamp<this.begin || timestamp>this.end || this.timeslots[timestamp] !== undefined) return
-    this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
+    this.logLoader.getLogByTimestamp(this.ext, timestamp, text=>{
       this.parseThermoLogData(text, timestamp)
     }, ()=>{
       if(this.timeslots[timestamp] === undefined) this.timeslots[timestamp] = null
@@ -70,7 +63,7 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
       a.forEach(d=>d.zdata.push({flag:0}))
 		}
 
-		for(let t=getBeginDayTimestamp(timeinterval.begin, this.timezone); t<timeinterval.end; t+=86400) {
+		for(let t=DateTime.getBeginDayTimestamp(timeinterval.begin); t<timeinterval.end; t+=86400) {
 			if(typeof(this.timeslots[t]) === 'undefined') load(t)
 			else if(this.timeslots[t] !== null) {
           a[0] = this.timeslots[t].temperature.fillzdata(timeinterval,tstep,a[0])
@@ -94,7 +87,7 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
       const event = string.split(';')
       if(event.length <= 2) return
       const time = T.parseEventOld(event)
-      if(time == 0) return
+      if(time === 0) return
       const data = Z.parseEventOld(event)
       dataset.push(data, time)
     })

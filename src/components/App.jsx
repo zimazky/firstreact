@@ -1,4 +1,4 @@
-import ArduinoController from '../arduinoapi/arduinoAPI.js'
+import ArduinoController from '../arduinoapi/arduinoAPI'
 import ArduinoLogController from '../arduinoapi/arduinoLogAPI'
 import Header from './Header.jsx'
 import TemperatureControl from './TemperatureControl.jsx'

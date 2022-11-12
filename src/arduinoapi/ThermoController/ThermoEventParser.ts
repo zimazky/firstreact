@@ -1,7 +1,6 @@
 import {ILogDataSet, IEventParser} from '../ILogController'
 import IrregularDataset from '../../utils/IrregularDS'
 
-
 type SensorData = {
   flag: number
   value: number
@@ -29,9 +28,9 @@ export class ThermoDataSet implements ILogDataSet<ThermoEventData> {
     this.power = new IrregularDataset(timestamp)
   }
   push(data: ThermoEventData, time: number): void {
-    if(data.temperature != undefined) this.temperature.push({...data.temperature, time})
-    if(data.humidity != undefined) this.humidity.push({...data.humidity, time})
-    if(data.power != undefined) this.power.push({flag: 1, value: data.power, time})
+    if(data.temperature !== undefined) this.temperature.push({...data.temperature, time})
+    if(data.humidity !== undefined) this.humidity.push({...data.humidity, time})
+    if(data.power !== undefined) this.power.push({flag: 1, value: data.power, time})
   }
 }
 
@@ -79,8 +78,8 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
     if(flag & 128) { // строка с полными данными
       this.temperature = 0
       this.humidity = 0
-      this.power = 0
-      this.mode = 0
+      data.power = this.power = flag & 4 ? 1 : 0
+      data.mode = this.mode = flag & 8 ? 1 : 0
       this.targetTemperature = 0
       this.targetTemperatureDelta = 0
       this.sensorState = 0
@@ -89,7 +88,7 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
     if(flag & 2) this.humidity += +event[j++]
     if(flag & 4) {
       // добавляем только если произошли изменения 0 -> 1
-      if(!this.power) data.power = this.power= 1
+      if(!this.power) data.power = this.power = 1
     }
     else {
       // добавляем только если произошли изменения 1 -> 0
@@ -97,7 +96,7 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
     }
     if(flag & 8) {
       // добавляем только если произошли изменения 0 -> 1
-      if(!this.mode) data.mode = this.mode= 1
+      if(!this.mode) data.mode = this.mode = 1
     }
     else {
       // добавляем только если произошли изменения 1 -> 0
@@ -147,8 +146,8 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
     if(flag & 128) { // строка с полными данными
       this.temperature = 0
       this.humidity = 0
-      this.power = 0
-      this.mode = 0
+      data.power = this.power = flag & 4 ? 1 : 0
+      data.mode = this.mode = flag & 8 ? 1 : 0
       this.targetTemperature = 0
       this.targetTemperatureDelta = 0
       this.sensorState = 0
@@ -157,7 +156,7 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
     if(flag & 2) this.humidity += +event[j++]
     if(flag & 4) {
       // добавляем только если произошли изменения 0 -> 1
-      if(!this.power) data.power = this.power= 1
+      if(!this.power) data.power = this.power = 1
     }
     else {
       // добавляем только если произошли изменения 1 -> 0
@@ -165,7 +164,7 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
     }
     if(flag & 8) {
       // добавляем только если произошли изменения 0 -> 1
-      if(!this.mode) data.mode = this.mode= 1
+      if(!this.mode) data.mode = this.mode = 1
     }
     else {
       // добавляем только если произошли изменения 1 -> 0

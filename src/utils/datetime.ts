@@ -160,15 +160,19 @@ export default class DateTime {
     const {year, month, day} = DateTime.getYearMonthDay(t)
     const M = month + 1
     return year + (M>9?'.':'.0') + M + (day>9?'.':'.0') + day
-  }  
-  
+  }
+  /** Получить строку даты в формате YYYYMMDD по времени UTC*/
+  static UTCYYYYMMDD(t: timestamp): string {
+    const {year, month, day} = DateTime.getUTCYearMonthDay(t)
+    const M = month + 1
+    return year + (M>9?'':'0') + M + (day>9?'':'0') + day
+  }
   /** Получить строку даты в формате YYYYMMDD по локальному времени */
   static YYYYMMDD(t: timestamp): string {
     const {year, month, day} = DateTime.getYearMonthDay(t)
     const M = month + 1
     return year + (M>9?'':'0') + M + (day>9?'':'0') + day
   }
-
   /** Получить времня в виде количества часов и минут с начала дня таймстемпа по времени UTC */
   static getUTCHoursMinutes(t: timestamp): {hours: number, minutes: number} {
     const time = DateTime.getUTCTime(t)

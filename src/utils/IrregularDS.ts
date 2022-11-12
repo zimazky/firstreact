@@ -123,9 +123,9 @@ export default class IrregularDataset {
 		// добавление второго и более значения в датасет
     // среднее значение можно посчитать
 		// считаем из предположения ступенчатой диаграммы (не линейная)
-    // v = (v*(t[i-1]-to)+(d[i-1]-do)*(t[i]-t[i-1]))/(t[i]-to)
+    // v = (v*(t[i-1]-to)+d[i-1]*(t[i]-t[i-1]))/(t[i]-to)
     if(this.tclose>this.topen) {
-      this.value = (this.value*(this.tclose-this.topen)+(this.close-this.open)*(d.time-this.tclose))/(d.time-this.topen)
+      this.value = (this.value*(this.tclose-this.topen)+this.close*(d.time-this.tclose))/(d.time-this.topen)
     }
     if(this.close == d.value && d.flag == 1) { // исключение повторения данных
       // при повторении сохраняются первая и последняя точка из серии

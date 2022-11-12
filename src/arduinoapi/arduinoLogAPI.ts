@@ -1,22 +1,20 @@
-import ArduinoLogLoader from './arduinoLogLoader'
+import LogLoader from './LogLoader'
 import { HydroSensorData } from './HydroSystemController/HydroLogController'
 import { TimeInterval } from './ILogController'
 import { ThermalSensorData } from './ThermoController/ThermoLogController'
 import { LLogController } from './LLogController/LLogController'
 
 export default class ArduinoLogAPI {
-  logLoader: ArduinoLogLoader
+  logLoader: LogLoader
   thermoSensors: ThermalSensorData[]
   hydroSensors: HydroSensorData[]
   logController: LLogController
-  timezone: number
 
-  constructor(url: string, onload=()=>{}, threads=8, timezone=3) {
-    this.logLoader = new ArduinoLogLoader(url,threads,timezone)
+  constructor(url: string, onload=()=>{}, threads=8) {
+    this.logLoader = new LogLoader(url, threads)
     this.thermoSensors = []
     this.hydroSensors = []
     this.logLoader.onload = onload
-    this.timezone = timezone
     this.logController = new LLogController(this, +new Date('2022.11.06')/1000, Date.now()/1000)
   }
   setOnLoad(fn: ()=>{}) { this.logLoader.onload = fn }

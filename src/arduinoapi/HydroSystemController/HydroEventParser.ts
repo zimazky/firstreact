@@ -23,8 +23,8 @@ export class HydroDataSet implements ILogDataSet<HydroEventData> {
     this.mode = new IrregularDataset(timestamp)
   }
   push(data: HydroEventData, time: number): void {
-    if(data.pressure != undefined) this.pressure.push({flag: data.flag, value: data.pressure, time})
-    if(data.mode != undefined) this.mode.push({flag: 1, value: data.mode, time})
+    if(data.pressure !== undefined) this.pressure.push({flag: data.flag, value: data.pressure, time})
+    if(data.mode !== undefined) this.mode.push({flag: 1, value: data.mode, time})
   }
 }
 

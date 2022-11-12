@@ -14,7 +14,7 @@ export class TickerDataSet implements ILogDataSet<TickerEventData> {
     this.loopcounter = new IrregularDataset(timestamp)
   }
   push(data: TickerEventData, time: number): void {
-    if(data.loopcounter != undefined) this.loopcounter.push({flag: 1, value: data.loopcounter, time})
+    if(data.loopcounter !== undefined) this.loopcounter.push({flag: 1, value: data.loopcounter, time})
   }
 }
 

@@ -1,5 +1,5 @@
 import ArduinoLogAPI from "../arduinoLogAPI"
-import ArduinoLogLoader from "../arduinoLogLoader"
+import LogLoader from "../LogLoader"
 import { HydroSensorData } from "../HydroSystemController/HydroLogController"
 import { ILogController } from "../ILogController"
 import { ThermalSensorData } from "../ThermoController/ThermoLogController"
@@ -11,15 +11,12 @@ export class LLogController implements ILogController<TickerEventData> {
   begin: number
   end: number
   timeslots: TickerDataSet[]
-  logLoader: ArduinoLogLoader
-  timezone: number
+  logLoader: LogLoader
   thermoSensors: ThermalSensorData[]
   hydroSensors: HydroSensorData[]
 
-
   constructor(parent: ArduinoLogAPI, begin: number, end: number) {
     this.logLoader = parent.logLoader
-    this.timezone = parent.timezone
     this.timeslots = []
     this.begin = begin
     this.end = end
@@ -57,6 +54,8 @@ export class LLogController implements ILogController<TickerEventData> {
       this.thermoSensors.forEach(t=>t.load(timestamp))
       this.hydroSensors.forEach(t=>t.load(timestamp))
     }
+    //console.log(this.thermoSensors)
+    //console.log(this.hydroSensors)
   }
 
 
@@ -79,21 +78,21 @@ export class LLogController implements ILogController<TickerEventData> {
     strings.forEach(string => {
       if(string.startsWith('F')) { isFull = true; return }
       let events = string.split(';')
-      const tindex = events.findIndex(e=>e == 'T')
+      const tindex = events.findIndex(e=>e === 'T')
       if(tindex<0) return // не найден блок данных тикера
       const [_, tdata] = T.parser.parseEvent(events.slice(tindex),isFull)
 
       events = events.slice(0,tindex)
       while(events.length > 0) {
         const id = events[0]
-        const z = Z.find(t=>t.name==id)
+        const z = Z.find(t=>t.name === id)
         if(z!==undefined) {
           const [nextevents, data] = z.parser.parseEvent(events, isFull)
           z.dataset.push(data, tdata.time)
           events = nextevents
           continue
         }
-        const h = H.find(t=>t.name==id)
+        const h = H.find(t=>t.name === id)
         if(h!==undefined) {
           const [nextevents, data] = h.parser.parseEvent(events, isFull)
           h.dataset.push(data, tdata.time)
