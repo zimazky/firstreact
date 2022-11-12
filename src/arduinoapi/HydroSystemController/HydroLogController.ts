@@ -2,7 +2,7 @@ import ArduinoLogLoader from "../arduinoLogLoader"
 import ArduinoLogAPI from "../arduinoLogAPI"
 import { HydroDataSet, HydroEventData, HydroEventParser } from "./HydroEventParser"
 import { ILogController, TimeInterval } from "../ILogController"
-import { TickerEventParser } from "../Ticker/TickerEventParser"
+import { TickerEventParser } from "../LLogController/TickerEventParser"
 
 function getBeginDayTimestamp(timestamp, timezone) {
   return (~~((timestamp+timezone*3600)/86400))*86400-timezone*3600
@@ -13,22 +13,21 @@ export class HydroSensorData implements ILogController<HydroEventData> {
   ext: string
   controller: ArduinoLogLoader
   timezone: number
-  onload: (t?: string)=>void
   color: string
   isShowPower: boolean
   timeslots: HydroDataSet[]
   begin: number
+  end: number
 
-
-  constructor(id: number, parent: ArduinoLogAPI, color: string, begin: number) {
+  constructor(id: number, parent: ArduinoLogAPI, color: string, begin: number, end: number) {
     this.id = id
     this.ext = 'H'+id
     this.controller = parent.logLoader
     this.timezone = parent.timezone
     this.color = color
-    this.onload = parent.onload
     this.timeslots = []
     this.begin = begin
+    this.end = end
   }
 
   createEventParser(): HydroEventParser {
@@ -51,12 +50,11 @@ export class HydroSensorData implements ILogController<HydroEventData> {
   }
 
   load(timestamp: number) {
+    if(timestamp<this.begin || timestamp>this.end || this.timeslots[timestamp] !== undefined) return
     this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
       this.parseHydroLogData(text, timestamp)
     }, ()=>{
-      if(this.timeslots[timestamp] === undefined) this.timeslots[timestamp] = new HydroDataSet(timestamp)
-    }, ()=>{
-      this.onload()
+      if(this.timeslots[timestamp] === undefined) this.timeslots[timestamp] = null
     })
 	}
 
@@ -68,10 +66,9 @@ export class HydroSensorData implements ILogController<HydroEventData> {
 		}
 
 		for(let t=getBeginDayTimestamp(timeinterval.begin,this.timezone);t<timeinterval.end;t+=86400) {
-      if(t<this.begin) continue
 			if(typeof(this.timeslots[t]) === 'undefined') load(t)
-			else /*if(this.timeslots[t].flag != 0)*/ {
-          a = this.timeslots[t]?.pressure?.fillzdata(timeinterval,tstep,a)
+			else if(this.timeslots[t] !== null) {
+          a = this.timeslots[t].pressure.fillzdata(timeinterval,tstep,a)
 			}
 		}
 		return a

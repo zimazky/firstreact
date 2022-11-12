@@ -17,11 +17,9 @@ type TQueue = {
   /** Имя файла */
   name: string
   /** Обработчик данных после загрузки */
-  onLoad: (t:string)=>void
+  resolve: (t:string)=>void
   /** Обработчик при ошибке */
-  onError: ()=>void
-  /** Заключительный обработчик при любом исходе загрузки файла */
-  onFinally: ()=>void
+  reject: ()=>void
 }
 
 enum LoadStatus {
@@ -38,6 +36,7 @@ export default class ArduinoLogLoader {
   private url: string
   private inProcess: string[] = []
   private timezone: number
+  onload = ()=>{}
 
   constructor(url: string, threadsLimit = 8, timezone = 3) {
     this.threadsLimit = threadsLimit
@@ -47,9 +46,9 @@ export default class ArduinoLogLoader {
 	}
 
   /** Загрузка и обработка следующего файла из очереди */
-  loadNext() {
+  loadNext = ()=>{
     const q = this.queue.shift()
-    if(q == undefined) return
+    if(q === undefined) return
     //console.log(q.name, this.queue.length, this.inProcess.length)
     this.inProcess.push(q.name)
     fetch(this.url + q.name)
@@ -58,23 +57,23 @@ export default class ArduinoLogLoader {
       // Исключение сработает только если не сетевая ошибка
       throw Error(`status=${r.status}`)
     })
-    .then(t=>q.onLoad(t))
+    .then(t=>q.resolve(t))
     .catch(e=>{
       console.log(`loading error ${q.name}: ${e.message}`)
-      q.onError()
+      q.reject()
     })
     .finally(()=>{
       this.inProcess = this.inProcess.filter(s=>s!=q.name)
-      q.onFinally()
+      this.onload()
       this.loadNext()
     })
   }
 
 	// Функция загрузки LOG-файла
-	getLogByName(name: string, onLoad = (t?:string)=>{}, onError = ()=>{}, onFinally = ()=>{}): LoadStatus {
+	getLogByName(name: string, resolve: (t:string)=>void, reject: ()=>void): LoadStatus {
     //уже есть в очереди
     if (this.queue.some(q => q.name == name) || this.inProcess.includes(name)) return LoadStatus.Queued
-    this.queue.push({name, onLoad, onError, onFinally})
+    this.queue.push({name, resolve, reject})
     //ограничиваем одновременную загрузку
     while(this.queue.length>0 && this.inProcess.length<this.threadsLimit) {
       this.loadNext()
@@ -83,11 +82,11 @@ export default class ArduinoLogLoader {
 	}
 	
   // Функция загрузки LOG-файла по timestamp
-	getLogByTimestamp(type:string, timestamp:number, onLoad = (t?:string)=>{}, onError = ()=>{}, onFinally = ()=>{}) {
+	getLogByTimestamp(type:string, timestamp:number, resolve: (t:string)=>void, reject = ()=>{}) {
     //не загружать будущие таймслоты
 		if (timestamp>getBeginDayTimestamp(Date.now()/1000,this.timezone)) return LoadStatus.NotYet
     const name = getYYYYMMDD(timestamp,this.timezone)+'.'+type
-    return this.getLogByName(name, onLoad, onError, onFinally)
+    return this.getLogByName(name, resolve, reject)
   }
 }
 

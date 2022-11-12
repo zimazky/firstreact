@@ -1,7 +1,7 @@
 import ArduinoLogLoader from "../arduinoLogLoader"
 import ArduinoLogAPI from "../arduinoLogAPI"
 import { ILogController, TimeInterval } from "../ILogController"
-import { TickerEventParser } from "../Ticker/TickerEventParser"
+import { TickerEventParser } from "../LLogController/TickerEventParser"
 import { ThermoDataSet, ThermoEventData, ThermoEventParser } from "./ThermoEventParser"
 
 function getBeginDayTimestamp(timestamp, timezone) {
@@ -18,19 +18,20 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
   isShowPower: boolean
   timeslots: ThermoDataSet[]
   begin: number
+  end: number
   
   static DATASET_NAMES = ['Temperature', 'Humidity', 'Power']
 
-  constructor(id: number, parent: ArduinoLogAPI, [tcolor,hcolor,pcolor], begin: number) {
+  constructor(id: number, parent: ArduinoLogAPI, [tcolor,hcolor,pcolor], begin: number, end: number) {
     this.id = id
     this.ext = 'Z'+id
     this.controller = parent.logLoader
     this.timezone = parent.timezone
-    this.onload = parent.onload
     this.colors = {t:tcolor,h:hcolor,p:pcolor}
     this.isShowPower = false
     this.timeslots = []
     this.begin = begin
+    this.end = end
   }
   
   createEventParser(): ThermoEventParser {
@@ -54,12 +55,11 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
 
 
   load(timestamp: number) {
+    if(timestamp<this.begin || timestamp>this.end || this.timeslots[timestamp] !== undefined) return
     this.controller.getLogByTimestamp(this.ext, timestamp, text=>{
       this.parseThermoLogData(text, timestamp)
     }, ()=>{
-      if(this.timeslots[timestamp] === undefined) this.timeslots[timestamp] = new ThermoDataSet(timestamp)
-    }, ()=>{
-      this.onload()
+      if(this.timeslots[timestamp] === undefined) this.timeslots[timestamp] = null
     })
 	}
 
@@ -71,12 +71,11 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
 		}
 
 		for(let t=getBeginDayTimestamp(timeinterval.begin, this.timezone); t<timeinterval.end; t+=86400) {
-      if(t<this.begin) continue
 			if(typeof(this.timeslots[t]) === 'undefined') load(t)
-			else /*if(this.timeslots[t].length)*/ {
-          a[0] = this.timeslots[t]?.temperature?.fillzdata(timeinterval,tstep,a[0])
-          a[1] = this.timeslots[t]?.humidity?.fillzdata(timeinterval,tstep,a[1])
-          a[2] = this.timeslots[t]?.power?.fillzdata(timeinterval,tstep,a[2])
+			else if(this.timeslots[t] !== null) {
+          a[0] = this.timeslots[t].temperature.fillzdata(timeinterval,tstep,a[0])
+          a[1] = this.timeslots[t].humidity.fillzdata(timeinterval,tstep,a[1])
+          a[2] = this.timeslots[t].power.fillzdata(timeinterval,tstep,a[2])
 			}
 		}      
 		return a
