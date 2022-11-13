@@ -5,7 +5,7 @@
       "sourceMap": true,
       "module": "commonjs",
       "target": "es2020",
-      "jsx": "react",
+      "jsx": "react-jsx",
       "noEmitOnError": true,
       "esModuleInterop": true,
       "allowSyntheticDefaultImports": true,

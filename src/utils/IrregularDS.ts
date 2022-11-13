@@ -415,7 +415,7 @@ export default class IrregularDataset implements OHLCVData {
 		let t = timeinterval.begin
 		let i = ~~((timeinterval.begin-this.time)/tstep) //индекс по датасету zdata
 		let zi = 0 //индекс по датасету z
-		if(i<0) { t = this.time; zi=-i; i=0 }
+		if(i<0) { t = this.time; zi = -i; i = 0 }
 
 		for(; t<timeinterval.end && t<this.tclose; i++, zi++, t+=tstep) {
 			const flag = this.zdata[i].flag

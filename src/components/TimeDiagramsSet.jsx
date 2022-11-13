@@ -1,4 +1,4 @@
-import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs.jsx'
+import {TimeDiagram, Line, SteppedLine, YTickLabels} from './Graphs'
 import Modal from './Modal.jsx';
 import {TimeTable} from './Table.jsx'
 import styles from './TimeDiagramsSet.module.css'
@@ -51,13 +51,13 @@ export default function TimeDiagramsSet(props) {
 	})
 
   //console.log(dataset)
- 	let tMin = Math.min(...dataset.thermalData.map(v=>v[0].min))
-	let tMax = Math.max(...dataset.thermalData.map(v=>v[0].max))
-	let hMin = Math.min(...dataset.thermalData.map(v=>v[1].min))
-	let hMax = Math.max(...dataset.thermalData.map(v=>v[1].max))
+ 	let tMin = Math.min(...dataset.thermalData.map(v=>v[0].min)) - 1
+	let tMax = Math.max(...dataset.thermalData.map(v=>v[0].max)) + 1
+	let hMin = Math.min(...dataset.thermalData.map(v=>v[1].min)) - 1
+	let hMax = Math.max(...dataset.thermalData.map(v=>v[1].max)) + 1
   
-	let hpMin = Math.min(...dataset.hydroData.map(v=>v.min))
-	let hpMax = Math.max(...dataset.hydroData.map(v=>v.max))
+	let hpMin = Math.min(...dataset.hydroData.map(v=>v.min)) - 0.05
+	let hpMax = Math.max(...dataset.hydroData.map(v=>v.max)) + 0.05
 
   let selectedDateStart = (~~((selectedDate+3*3600)/86400))*86400-3*3600
   return (

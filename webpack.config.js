@@ -20,7 +20,7 @@ module.exports = {
         loader: 'ts-loader',
       },
       {
-        test: /\.(js|jsx)$/,
+        test: /\.jsx?$/,
         exclude: '/node_modules/',
         loader: 'babel-loader',
         options:{

@@ -1,6 +1,9 @@
+declare global {
+  interface React {}
+}
+
 import usePointerZoom from '../hooks/usePointerZoom'
 import styles from './Graphs.module.css'
-
 
 // data - массив элементов {flag,value}
 //        flag - признак отображения точки (0,1 или false,true)
@@ -320,7 +323,7 @@ function getYTickLabels(min, max, height, minTick=20) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Компонент временной диаграмы
-export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, max=1, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}, onSelectDate=()=>{} }) {
+export function TimeDiagram({title='TimeDiagram', width=300, height=200, min=0, max=1, children=null, timeInterval, onShift=()=>{}, onZoom=()=>{}, onSelectDate=(t)=>{} }) {
 
   const [cursorPosition, setCursorPosition] = React.useState({x:0,y:0})
   const diagramElement = React.useRef(null);
