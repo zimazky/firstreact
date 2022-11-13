@@ -1,49 +1,55 @@
-import { TimeInterval } from "./datetime"
 
-/** Тип данных в нерегулярном датасете */
-export type Data = {
-	/** признак разрыва (0 - разрыв, 1 - непрерывность)
-	 *  разрыв указывает на то, что между предыдущим элементом и
-	 *  текущим нет связи */
+/** Скалярный тип логических данных для регулярного датасета */
+type BData = {
+	/** Логический признак непрерывности текущего элемента с предыдущим:
+	 *  0 - разрыв с предыдущим элементом
+	 *  1 - непрерывность
+	*/
 	flag: number
-	/** метка времени точки */
-	time: number
+}
+/** Скалярный тип данных для регулярного датасета */
+interface Data extends BData {
 	/** значение точки */
 	value: number
 }
-
-/** Тип данных в регулярном Z датасете */
-export type ZData = {
-	flag: number
-	value: number
+/** Тип данных, включающий время, для нерегулярного по времени датасета */
+interface IrregularData extends Data {
+	/** метка времени точки */
+	time: number
 }
-
-/** Тип данных в регулярном OHLC датасете */
-export type OHLCData = {
-	flag: number
-	open: number
+/** Тип High-Low данных для регулярного датасета */
+interface HLData extends BData {
+	/** максимальное значение */
 	high: number
+	/** минимальное значение */
 	low: number
+}
+/** Тип Open-High-Low-Close данных для регулярного датасета */
+interface OHLCData extends HLData {
+	/** начальное значение */
+	open: number
+	/** конечное значение*/
 	close: number
 }
 
-/** Тип данных в регулярном HL датасете */
-export type HLData = {
-	flag: number
-	high: number
-	low: number
-}
+interface OHLCVData extends Data, OHLCData {}
 
-export interface IDataSet<T> {
+interface IDataSet<T extends BData> {
 	min: number
 	max: number
 	zdata: T[]
 }
 
-export type ZDataSet = IDataSet<ZData>
-export type HLDataSet = IDataSet<HLData>
-export type OHLCDataSet = IDataSet<OHLCData>
+type ZDataSet = IDataSet<Data>
+type HLDataSet = IDataSet<HLData>
+type OHLCDataSet = IDataSet<OHLCData>
 
+interface TimeInterval {
+  begin: number
+  end: number
+}
+
+type DataSetModes = 'linear' | 'stepped' | 'highlow' | 'ohlc' | 'differential'
 /******************************************************************************
  * Масштабируемый датасет с нерегулярными по времени данными, приводимый к
  * регулярному датасету с усредненными значениями величин
@@ -63,13 +69,11 @@ export type OHLCDataSet = IDataSet<OHLCData>
  *           'differential' - приращения между границами баров (пока не реализовано)
  *
  */
-export default class IrregularDataset {
+export default class IrregularDataset implements OHLCVData {
 	/** время начала датасета (идентифицирует таймслот) */
 	time: number
-	/** режим отображения на регулярную сетку */
-	zmode: string
 	/** нерегулярный по времени датасет */
-	data: Data[] = []
+	data: IrregularData[] = []
 	/** признак загрузки (1 если загружена хотя бы одна точка) */
 	flag = 0
 	/** среднее значение по всему датасету */
@@ -88,20 +92,23 @@ export default class IrregularDataset {
 	tclose = 0
 	/** число повторений одного значения в конце датасета
 	 *  используется для исключения дублирования данных при добавлении значений в датасет * */
-	nclose = 0
+	private nclose = 0
 
 	// секция для кэширования перемасштабированных данных
 
+	/** режим отображения на регулярную сетку */
+	private zmode: DataSetModes
 	/** шаг сетки регулярного по времени датасета
 	 *  вначале 0, перемасштабирование не установлено */
-	tstep = 0
+	private tstep = 0
+	/** минимальный шаг сетки регулярного по времени датасета */
+	private static mintstep = 1
 	/** перемасштабированный регулярный по времени датасет */
-	zdata: ZData[] = []
-	ohlcdata: OHLCData[] = []
-	hldata: HLData[] = []
+	private zdata: Data[] = []
+	private ohlcdata: OHLCData[] = []
+	private hldata: HLData[] = []
 
-
-	constructor(time: number, zmode = 'stepped') {
+	constructor(time: number, zmode: DataSetModes = 'stepped') {
 		this.time = time
 		this.zmode = zmode
 	}
@@ -109,11 +116,12 @@ export default class IrregularDataset {
 	/****************************************************************************
 	 * Добавление новой точки в датасет 
 	 * */
-	push(d: Data): void {
+	push(d: IrregularData): void {
 		// !!!ДОРАБОТАТЬ
 		// РАССМОТРЕТЬ СЛУЧАЙ, КОГДА ОДНА ТОЧКА СЛЕВА, А ДРУГАЯ СПРАВА ОТ ГРАНИЦЫ
 		if (d.time < this.time) return // грубо отбрасываются все точки слева
-		if (this.data.length == 0) { // инициализация при добавлении первого значения 
+		if (this.data.length == 0) { 
+			// инициализация при добавлении первого значения 
 			this.flag = 1
 			this.value = this.low = this.high = this.open = this.close = d.value
 			this.topen = this.tclose = d.time
@@ -129,12 +137,14 @@ export default class IrregularDataset {
     }
     if(this.close == d.value && d.flag == 1) { // исключение повторения данных
       // при повторении сохраняются первая и последняя точка из серии
-      if(this.nclose == 0) { // первое повторение
+      if(this.nclose == 0) { 
+				// первое повторение
         this.nclose++
         this.tclose = d.time
         this.data.push({flag: d.flag, time:d.time, value:d.value})
       }
-      else { // второе и более повторение
+      else { 
+				// второе и более повторение
         this.data[this.data.length-1].time = d.time
         this.tclose = d.time
       }
@@ -153,8 +163,8 @@ export default class IrregularDataset {
 	 *  по способу кусочно-линейной интерполяции
 	 *  z - шаг регуляризации
 	*/
-	getlinearregdata(z: number): ZData[] {
-		const zdata: ZData[] = []
+	getlinearregdata(z: number): Data[] {
+		const zdata: Data[] = []
 		let d = this.data[0]
 		let zt = this.time
 		let v0 = d.value // значение в начале (на левой границе) текущей ячейки (считаем = d.value)
@@ -220,18 +230,18 @@ export default class IrregularDataset {
 	/****************************************************************************
 	 * Получение регуляризованного датасета
 	 * по способу кусочно-ступенчатой интерполяции
-	 * @param z - шаг сетки регуляризации
+	 * @param tstep - шаг сетки регуляризации
 	 * @returns регуляризованный датасет
 	 */
-	getsteppedregdata(z: number): ZData[] {
-		const zdata: ZData[] = []
+	getsteppedregdata(tstep: number): Data[] {
+		const zdata: Data[] = []
 		let d = this.data[0]
 		let zt = this.time
 		let v0 = d.value // значение в начале (на левой границе) текущей ячейки (считаем = d.value)
-		while (zt+z < d.time) {
+		while (zt+tstep < d.time) {
 			// заполняем регулярные ячейки неактивными значениями до первой точки
 			zdata.push({flag: 0, value: v0})
-			zt += z
+			zt += tstep
 		}
 		// сохраняем значение первой точки в ячейку
 		zdata.push({flag: 1, value: v0})
@@ -239,20 +249,20 @@ export default class IrregularDataset {
 			d = this.data[i]
 			const n = zdata.length-1
 			const dm = this.data[i-1]
-			if (d.time < zt+z) {
+			if (d.time < zt+tstep) {
 				// попали в уже существующую ячейку
 				// вычисляем усредненное значение аналогично кусочно-линейному датасету
-				zdata[n].value += (d.value-v0)*(zt+z-d.time)/z
+				zdata[n].value += (d.value-v0)*(zt+tstep-d.time)/tstep
 				v0 = d.value
 			}
 			else {
 				// создаем новые ячейки
-				zt += z
+				zt += tstep
 				// ячейки через которые отрезок проходит насквозь
 				v0 = dm.value // значение на левой границе
-				while (zt+z < d.time) {
+				while (zt+tstep < d.time) {
 					zdata.push({flag: d.flag, value: v0})
-					zt += z
+					zt += tstep
 				}
 				// ячейка в которой завершается отрезок
 				if(d.flag == 0) v0 = d.value
@@ -363,47 +373,61 @@ export default class IrregularDataset {
 
 	/****************************************************************************
 	 * Перемасштабирование датасета
-	 * @param z -шаг сетки регуляризации
+	 * @param tstep -шаг сетки регуляризации
 	 */
-	rezoom(z: number): void {
-		if (z < 1) z = 1 // ограничение на масштабирование z>=1
-		if (this.tstep == z || this.data.length == 0) return // не перемасштабируем, если z не поменялся или датасет пустой
-		this.tstep = z
+	rezoom(tstep: number): void {
+		if (tstep < IrregularDataset.mintstep) 
+			tstep = IrregularDataset.mintstep // ограничение на масштабирование z>=1
+		if (this.tstep == tstep || this.data.length == 0) 
+			return // не перемасштабируем, если z не поменялся или датасет пустой
+		this.tstep = tstep
 		switch(this.zmode) {
-			case 'linear': this.zdata = this.getlinearregdata(z); break
-			case 'stepped': this.zdata = this.getsteppedregdata(z); break
-			case 'highlow': this.hldata = this.gethighlowregdata(z); break
-			case 'ohlc': this.ohlcdata = this.getohlcregdata(z); break
+			case 'linear': this.zdata = this.getlinearregdata(tstep); break
+			case 'stepped': this.zdata = this.getsteppedregdata(tstep); break
+			case 'highlow': this.hldata = this.gethighlowregdata(tstep); break
+			case 'ohlc': this.ohlcdata = this.getohlcregdata(tstep); break
 		}
+	}
+
+	/** Создание регулярного датасета и заполнение начальными данными */
+	static createzdata(timeinterval: TimeInterval, tstep: number): ZDataSet {
+		const a: ZDataSet = {zdata: [], min:Number.MAX_VALUE, max: -Number.MAX_VALUE}
+		if(tstep<IrregularDataset.mintstep) tstep = IrregularDataset.mintstep
+		for(let t = timeinterval.begin; t<timeinterval.end; t+=tstep) {
+      a.zdata.push({flag: 0, value: 0})
+		}
+		return a
 	}
 	
 	/****************************************************************************
-	 * Заполнение регулярного датасета z
-	 * @param timeinterval 
-	 * @param tstep 
-	 * @param z 
-	 * @returns 
+	 * Заполнение регулярного датасета z. 
+	 * Перед вызовом датасет заполнен начальными данными
+	 * @param timeinterval интервал датасета
+	 * @param tstep - шаг регулярной сетки (в секундах)
+	 * @param z - начальный датасет
+	 * @returns возвращает ссылку на измененный датасет
 	 */
 	fillzdata(timeinterval: TimeInterval, tstep: number, z: ZDataSet): ZDataSet {
-		if(this.tclose<=timeinterval.begin || this.topen>=timeinterval.end) return z // датасет не попал в интервал
+		if(tstep<IrregularDataset.mintstep) tstep = IrregularDataset.mintstep
+		if(this.tclose<=timeinterval.begin || this.topen>=timeinterval.end) 
+			return z // датасет не попал в интервал
 		this.rezoom(tstep)
 		let t = timeinterval.begin
 		let i = ~~((timeinterval.begin-this.time)/tstep) //индекс по датасету zdata
 		let zi = 0 //индекс по датасету z
 		if(i<0) { t = this.time; zi=-i; i=0 }
 
-		let min = z.min, max = z.max
 		for(; t<timeinterval.end && t<this.tclose; i++, zi++, t+=tstep) {
 			const flag = this.zdata[i].flag
 			z.zdata[zi].flag = flag
-			const ft = this.zdata[i].value
-			z.zdata[zi].value = ft;
+			const value = this.zdata[i].value
+			z.zdata[zi].value = value;
 			if(flag == 1) {
-				min = (ft < min) ? ft : min
-				max = (ft > max) ? ft : max
+				z.min = (value < z.min) ? value : z.min
+				z.max = (value > z.max) ? value : z.max
 			}
 		}
-		return {zdata: z.zdata, min, max}
+		return z
 	}
 
 	/****************************************************************************
@@ -414,14 +438,15 @@ export default class IrregularDataset {
 	 * @returns 
 	 */
 	fillHLData(timeinterval: TimeInterval, tstep: number, z: HLDataSet): HLDataSet {
-		if(this.tclose<=timeinterval.begin || this.topen>=timeinterval.end) return z // датасет не попал в интервал
+		if(tstep<IrregularDataset.mintstep) tstep = IrregularDataset.mintstep
+		if(this.tclose<=timeinterval.begin || this.topen>=timeinterval.end) 
+			return z // датасет не попал в интервал
 		this.rezoom(tstep)
 		let t = timeinterval.begin
 		let i = ~~((timeinterval.begin-this.time)/tstep) //индекс по датасету hldata
 		let zi = 0 //индекс по датасету z
 		if(i<0) { t = this.time; zi=-i; i=0 }
 
-		let min = z.min, max = z.max
 		for(; t<timeinterval.end && t<this.tclose; i++, zi++, t+=tstep) {
 			const flag = this.hldata[i].flag
 			z.zdata[zi].flag = flag
@@ -430,11 +455,11 @@ export default class IrregularDataset {
 			z.zdata[zi].high = high
 			z.zdata[zi].low = low
 			if(flag == 1) {
-				min = (low < min)? low : min
-				max = (high > max)? high : max
+				z.min = (low < z.min)? low : z.min
+				z.max = (high > z.max)? high : z.max
 			}
 		}
-		return {zdata: z.zdata, min, max}
+		return z
 	}
 
 	/****************************************************************************
@@ -445,14 +470,14 @@ export default class IrregularDataset {
 	 * @returns 
 	 */
 	fillOHLCData(timeinterval: TimeInterval, tstep: number, z: OHLCDataSet): OHLCDataSet {
-		if(this.tclose<=timeinterval.begin || this.topen>=timeinterval.end) return z // датасет не попал в интервал
+		if(tstep<IrregularDataset.mintstep) tstep = IrregularDataset.mintstep
+		if(this.tclose<=timeinterval.begin || this.topen>=timeinterval.end) 
+			return z // датасет не попал в интервал
 		this.rezoom(tstep)
 		let t = timeinterval.begin
 		let i = ~~((timeinterval.begin-this.time)/tstep) //индекс по датасету hldata
 		let zi = 0 //индекс по датасету z
 		if(i<0) { t = this.time; zi=-i; i=0 }
-
-		let min = z.min, max = z.max
 
 		for(; t<timeinterval.end && t<this.tclose; i++, zi++, t+=tstep) {
 			const flag = this.ohlcdata[i].flag
@@ -462,11 +487,11 @@ export default class IrregularDataset {
 			const close = this.ohlcdata[i].close
 			z.zdata[zi] = {flag, open, high, low, close}
 			if(flag == 1) {
-				min = (low < min) ? low : min
-				max = (high > max) ? high : max
+				z.min = (low < z.min) ? low : z.min
+				z.max = (high > z.max) ? high : z.max
 			}
 		}
-		return {zdata: z.zdata, min, max}
+		return z
 	}
 
 	/****************************************************************************

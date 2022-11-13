@@ -4,6 +4,7 @@ import { HydroDataSet, HydroEventData, HydroEventParser } from "./HydroEventPars
 import { ILogController, TimeInterval } from "../ILogController"
 import { TickerEventParser } from "../LLogController/TickerEventParser"
 import DateTime from "../../utils/datetime"
+import IrregularDataset from "../../utils/IrregularDS"
 
 export class HydroSensorData implements ILogController<HydroEventData> {
   id: number
@@ -54,16 +55,12 @@ export class HydroSensorData implements ILogController<HydroEventData> {
 	}
 
   getRegData(timeinterval: TimeInterval, tstep: number, load: (t:number)=>void) {
-		let a = {zdata:[],min:Number.MAX_VALUE,max:Number.MIN_VALUE}
-		
-		for(let t=timeinterval.begin;t<timeinterval.end;t+=tstep) {
-      a.zdata.push({flag:0})
-		}
+		const a = IrregularDataset.createzdata(timeinterval, tstep)
 
 		for(let t=DateTime.getBeginDayTimestamp(timeinterval.begin); t<timeinterval.end; t+=86400) {
 			if(typeof(this.timeslots[t]) === 'undefined') load(t)
 			else if(this.timeslots[t] !== null) {
-          a = this.timeslots[t].pressure.fillzdata(timeinterval,tstep,a)
+          this.timeslots[t].pressure.fillzdata(timeinterval, tstep, a)
 			}
 		}
 		return a

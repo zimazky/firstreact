@@ -4,6 +4,7 @@ import { ILogController, TimeInterval } from "../ILogController"
 import { TickerEventParser } from "../LLogController/TickerEventParser"
 import { ThermoDataSet, ThermoEventData, ThermoEventParser } from "./ThermoEventParser"
 import DateTime from "../../utils/datetime"
+import IrregularDataset from "../../utils/IrregularDS"
 
 export class ThermalSensorData implements ILogController<ThermoEventData> {
   id: number
@@ -57,18 +58,15 @@ export class ThermalSensorData implements ILogController<ThermoEventData> {
 	}
 
   getRegData(timeinterval: TimeInterval, tstep: number, load: (t:number)=>void) {
-		let a = ThermalSensorData.DATASET_NAMES.map(()=>({zdata:[],min:Number.MAX_VALUE,max:Number.MIN_VALUE}))
+		const a = ThermalSensorData.DATASET_NAMES.map(()=>
+      IrregularDataset.createzdata(timeinterval, tstep))
 		
-		for(let t=timeinterval.begin;t<timeinterval.end;t+=tstep) {
-      a.forEach(d=>d.zdata.push({flag:0}))
-		}
-
 		for(let t=DateTime.getBeginDayTimestamp(timeinterval.begin); t<timeinterval.end; t+=86400) {
 			if(typeof(this.timeslots[t]) === 'undefined') load(t)
 			else if(this.timeslots[t] !== null) {
-          a[0] = this.timeslots[t].temperature.fillzdata(timeinterval,tstep,a[0])
-          a[1] = this.timeslots[t].humidity.fillzdata(timeinterval,tstep,a[1])
-          a[2] = this.timeslots[t].power.fillzdata(timeinterval,tstep,a[2])
+        this.timeslots[t].temperature.fillzdata(timeinterval, tstep, a[0])
+        this.timeslots[t].humidity.fillzdata(timeinterval, tstep, a[1])
+        this.timeslots[t].power.fillzdata(timeinterval, tstep, a[2])
 			}
 		}      
 		return a
