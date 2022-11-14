@@ -145,8 +145,8 @@ export class HydroEventParser implements IEventParser<HydroEventData> {
     // преобразование к нормальному представлению давления
     let p = (flag & 2) ? 5.*(this.pdata-102.3)/818.4 : this.pdata/1000.
     // проверка на корректность данных
-    if(p>=-1 && p<=5) {
-      data.flag = 1
+    if(p>=-1 && p<=6) {
+      data.flag = flag & 128 ? 0 : 1
       data.pressure = this.pressure = p
     }
     return [event.slice(j), data]
