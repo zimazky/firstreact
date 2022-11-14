@@ -1,7 +1,4 @@
-declare global {
-  interface React {}
-}
-
+declare global { interface React {} }
 import usePointerZoom from '../hooks/usePointerZoom'
 import styles from './Graphs.module.css'
 
@@ -50,7 +47,6 @@ export function SteppedLine({data, height, barw=2, min, max, color='#FFF'}) {
     <path d={d} fill='none' stroke={color} strokeWidth='1'/>
   )
 }
-
 
 const timeZone = 3
 const timeUnits = [

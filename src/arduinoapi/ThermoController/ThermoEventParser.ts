@@ -141,8 +141,12 @@ export class ThermoEventParser implements IEventParser<ThermoEventData> {
   public parseEvent(event: string[], isFull: boolean): [string[], ThermoEventData] {
    
     let data: ThermoEventData = {}
-    const flag = +event[1]
-    let j = 2;
+    let j = 0
+    // Проверка на разделитель между идентификатором и следующим значением
+    // Для уменьшения размера файла можно убрать разделитель
+    if(event[0].length == 2) j += 1 
+    else event[0] = event[0].slice(2)
+    const flag = +event[j++]
     if(flag & 128) { // строка с полными данными
       this.temperature = 0
       this.humidity = 0

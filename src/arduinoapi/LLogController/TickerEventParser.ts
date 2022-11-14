@@ -41,12 +41,17 @@ export class TickerEventParser implements IEventParser<TickerEventData>{
       this.time = 0
       this.loopcounter = 0
     }
-    let ptime = +event[1]
+    let j = 0
+    // Проверка на разделитель между идентификатором и следующим значением
+    // Для уменьшения размера файла можно убрать разделитель
+    if(event[0].length == 1) j += 1 
+    else event[0] = event[0].slice(1)
+    let ptime = +event[j++] 
     // исправление ошибки в логах, отрицательная корректировка времени выводится как положительное число
     ptime = ptime > 2147483647 ? ptime-4294967296 : ptime
     if(ptime<0) console.log(ptime, this.time)
     this.time += ptime
-    this.loopcounter += +event[2]
+    this.loopcounter += +event[j++]
     return [event.slice(3), {time: this.time, loopcounter: this.loopcounter}]
   }
 

@@ -10,7 +10,7 @@ export default function({zone, onSetTemperature, onSetPowerControl}) {
       {'ZONE'+zone.id+' Sensor: '+ArduinoController.sensorState(zone.sensorState)}
     </div>
     <div>
-      <Button active={zone.onControl?true:false} onClick={()=>onSetPowerControl(zone.id)}>PWRCTRL</Button>
+      <Button active={zone.onControl?true:false} onClick={()=>onSetPowerControl(zone)}>PWRCTRL</Button>
       <Button active={zone.powerOn?true:false} disabled>PWR</Button>
       <Button onClick={()=>{console.log('showpwr_button')}}>SHOWPWR</Button>
       <Button>CONFIG</Button>

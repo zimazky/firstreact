@@ -78,21 +78,21 @@ export class LLogController implements ILogController<TickerEventData> {
     strings.forEach(string => {
       if(string.startsWith('F')) { isFull = true; return }
       let events = string.split(';')
-      const tindex = events.findIndex(e=>e === 'T')
+      const tindex = events.findIndex(e=>e.startsWith('T'))
       if(tindex<0) return // не найден блок данных тикера
       const [_, tdata] = T.parser.parseEvent(events.slice(tindex),isFull)
 
       events = events.slice(0,tindex)
       while(events.length > 0) {
         const id = events[0]
-        const z = Z.find(t=>t.name === id)
+        const z = Z.find(t=>id.startsWith(t.name))
         if(z!==undefined) {
           const [nextevents, data] = z.parser.parseEvent(events, isFull)
           z.dataset.push(data, tdata.time)
           events = nextevents
           continue
         }
-        const h = H.find(t=>t.name === id)
+        const h = H.find(t=>id.startsWith(t.name))
         if(h!==undefined) {
           const [nextevents, data] = h.parser.parseEvent(events, isFull)
           h.dataset.push(data, tdata.time)

@@ -64,18 +64,16 @@ export default function App() {
   })
 
   const onSetPowerControl = React.useCallback( zone => {
-    const i = zone-1
-    if(state.zones[i].onControl) {
-      arduinoController.powerOff(
-        zone,
-        () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone ? {...rec, onControl: 0} : rec )}) )
-      )
-      return
+    if(zone.onControl==0) {
+      arduinoController.powerOn(
+        zone.id,
+        () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone.id ? {...rec, onControl: !rec.onControl} : rec )})))
+        return
     }
-    arduinoController.powerOn(
-      zone,
-      () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone ? {...rec, onControl: 1} : rec )}) )
-    )
+    arduinoController.powerOff(
+        zone.id,
+        () => setState( s => ({...s, zones: s.zones.map( rec => rec.id==zone.id ? {...rec, onControl: !rec.onControl} : rec )}) )
+      )
   })
 
   return (
