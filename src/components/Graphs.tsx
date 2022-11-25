@@ -306,7 +306,7 @@ function getYTickLabels(min, max, height, minTick=20) {
 
   let yLabels = []
   let currentTick = max
-  let nextCurrentTick = step*(~~(max/step))
+  let nextCurrentTick = step*Math.floor(max/step)
   do {
     let height = nextCurrentTick>min ? scale*(currentTick-nextCurrentTick) : scale*(currentTick-min)
     height>0 && yLabels.push({tick: currentTick, label: currentTick.toFixed(dign), height})
